@@ -9,12 +9,22 @@
 # Thanks,
 # Bill
 
-my.df <- read.csv("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code/PCI.csv")
+setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
+my.df <- read.csv("PCI.csv")
 
-# 
+# Create new variables 
 my.df$sq.ft <- my.df$PavementWi * my.df$Length
 my.df$sq.yd <- my.df$sq.ft * 0.111111
+my.df$total.pci <- my.df$sq.yd * my.df$OCI
+my.df$ideal.pci <- my.df$sq.yd * 95
+my.df$delta.pci <- my.df$ideal.pci - my.df$total.pci
+my.df$delta.over.cost <- my.df$delta.pci / my.df$ExtendedCo
+aggregate(delta.over.cost ~ PlanActivi, my.df, mean ) # Crack Seal is crazy cost efficient
 
+
+# subset of the ones you would do the 1st year
+biggest.bang <- my.df[which(my.df$delta.over.cost > 2),]
+sum(biggest.bang$ExtendedCo)
 
 ###  Visualize ###
 library(ggplot2)
@@ -65,3 +75,24 @@ hist(my.df$last.paved) # I'm skeptical there are streets we have not paved since
 # Subsets of the modeled data
 curtatone <- my.df[which(my.df$last.paved > 2003),]
 really.old <- my.df[which(my.df$last.paved < 1989),]
+
+
+# test
+plot(log(my.df$ExtendedCo), my.df$OCI)
+plot(my.df$delta.over.cost, my.df$OCI) # checking cost-effectiveness
+fit <- lm(my.df$delta.over.cost, my.df$OCI)
+
+# To see where the bands begin and end
+aggregate(OCI ~ PlanActivi, my.df, mean )
+aggregate(OCI ~ PlanActivi, my.df, min )
+aggregate(OCI ~ PlanActivi, my.df, max )
+
+# Now model cost as a f(PCI): this averages differences between collectors and arterials
+my.df$cost.per.sy <- ifelse((my.df$OCI > 67) & (my.df$OCI < 89), 1.8,
+                            ifelse((my.df$OCI > 44) & (my.df$OCI < 67), 18.50,
+                            ifelse((my.df$OCI > 23) & (my.df$OCI < 44), 83.50,
+                                   ifelse((my.df$OCI > 0) & (my.df$OCI < 23), 150,
+                                          ifelse(my.df$OCI > 89, 0, 360)))))
+                            
+                                   
+
