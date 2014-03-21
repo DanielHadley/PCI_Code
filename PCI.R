@@ -1,13 +1,7 @@
-# Dan,
-# 
-# See attached.  OCI value = PCI.  Note these scores are from November 2012.  You will recognize some streets have already been done - should have score of 100.  We typically freshen this data annually and do have an existing contract to update your pavement management system but are focusing our contract hours/budget towards finalizing the City's ADA Transition Plan with respect to the public right of way. 
-# 
-# I will forward you sidewalk and ramp shapes under another email.  As you will hear from Melissa, Stan, Besty Allen, and David Shapiro - as part of the City's transition plan the City needs to commit a reasonable portion of public works construction budget towards ADA improvements that entail sidewalk, ramp and APS work annually and report these ongoing improvements to the FHWA.  
-# 
-# I'm working for formulate some suggestions based on Cambridge and Boston's commitments, in the meantime you should present a visual of sidewalk/ramp conditions to the Mayor so he may start to digest this information.
-# 
-# Thanks,
-# Bill
+# This code cleans and analyzes data from FST, the pavement consultant
+# OCI value = PCI.  Note these scores are from November 2012.
+# It models the cost and PCI degredation in order to optimize pavement decisions
+# Created By Daniel Hadley
 
 setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
 my.df <- read.csv("PCI.csv")
@@ -43,13 +37,14 @@ plot(log(my.df$ExtendedCo), my.df$OCI)
 plot(my.df$delta.over.cost, my.df$OCI) # checking cost-effectiveness
 fit <- lm(my.df$delta.over.cost, my.df$OCI)
 
+
+# First model cost as a f(PCI) using logical tests: 
+# this averages differences between collectors and arterials
 # To see where the bands begin and end
 aggregate(OCI ~ PlanActivi, my.df, mean )
 aggregate(OCI ~ PlanActivi, my.df, min )
 aggregate(OCI ~ PlanActivi, my.df, max )
 
-# Now model cost as a f(PCI) using logical tests: 
-# this averages differences between collectors and arterials
 my.df$cost.per.sq.yd.boolean <- ifelse((my.df$OCI > 67) & (my.df$OCI < 89), 1.8,
                             ifelse((my.df$OCI > 44) & (my.df$OCI < 67), 18.50,
                             ifelse((my.df$OCI > 23) & (my.df$OCI < 44), 83.50,
@@ -60,24 +55,9 @@ my.df$cost.per.sq.yd.boolean <- ifelse((my.df$OCI > 67) & (my.df$OCI < 89), 1.8,
 
 # Now model the cost degredation as a f(PCI) using a smooth curve
 # This smooths out all of the "cliffs" from the difference maintenance bands, 
-# but it approximates how quickly costs escalate as a f of PCI
-# fit{{130, 0}, {100, 0}, {89, 0}, {95, 0}, {78, 1.8}, {57, 18.5}, {36, 83.5}, {18, 150}, {0, 150}
-# I think this could be done much better in R
-# x <- c(100, 89, 95, 78, 57, 36, 18, 0) # PCI
-# y <- c(0.01, 0.01, 0.01, 1.8, 18.5, 83.5, 150, 150) #Cost 
-# d <- data.frame(y, x) 
-# I think one possible specification would be a cubic linear model
-# y.hat <- predict(lm(y~x+I(x^2)+I(x^3), data=d)) 
-my.df$cost <- 0.0141196 * my.df$OCI^2 -3.165 * my.df$OCI + 170.95
-plot(my.df$cost, my.df$OCI)
+# but it approximates how quickly costs escalate as a f of PCI and allows for linear optimization
 
-# Test
-plot(my.df$cost , my.df$ExtendedCo)
-fit <- lm(my.df$ExtendedCo ~ my.df$cost , data=my.df)
-summary(fit) # show results
-
-
-####  Better yet, use the empirical distribution ####
+####  Use the empirical distribution of PCI ####
 # http://davetang.org/muse/2013/05/09/on-curve-fitting/
 y = my.df$cost.per.sq.yd 
 x = my.df$OCI
@@ -109,12 +89,16 @@ my.df$cost.model <- 1.351524e+02 + (1.845730e+00 * my.df$OCI) +
   (-8.857414e-06 * my.df$OCI^4) 
 
 
-plot(my.df$cost.model,my.df$cost.per.sq.yd)
-
 fit <- lm(my.df$cost.model,my.df$cost.per.sq.yd)
 summary(fit) # show results
 
-hist(my.df$cost.model)
+# Visualize
+plot(my.df$cost.model*my.df$sq.yd, my.df$cost.per.sq.yd*my.df$sq.yd)
+plot(log(my.df$cost.model*my.df$sq.yd), log(my.df$cost.per.sq.yd*my.df$sq.yd))
+
+
+
+
 
 ###  Visualize ###
 library(ggplot2)
