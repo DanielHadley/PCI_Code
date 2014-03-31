@@ -4,18 +4,19 @@
 # Created By Daniel Hadley
 
 setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
-my.df <- read.csv("PCI.csv")
+d <- read.csv("PCI.csv")
 
 # Create new variables 
-my.df$sq.ft <- my.df$PavementWi * my.df$Length # Sq. Feet
-my.df$sq.yd <- my.df$sq.ft * 0.111111 # Sq. Yards
-my.df$total.pci <- my.df$sq.yd * my.df$OCI # Sum PCI
-my.df$ideal.pci <- my.df$sq.yd * 95 # Ideal sum PCI
-my.df$delta.pci <- my.df$ideal.pci - my.df$total.pci #Difference
-my.df$delta.over.cost <- my.df$delta.pci / my.df$ExtendedCo #One cost measure
-aggregate(delta.over.cost ~ PlanActivi, my.df, mean ) # Crack Seal is crazy cost efficient
+d$sq.ft <- d$PavementWi * d$Length # Sq. Feet
+d$sq.yd <- d$sq.ft * 0.111111 # Sq. Yards
+d$total.pci <- d$sq.yd * d$OCI # Sum PCI
+d$ideal.pci <- d$sq.yd * 95 # Ideal sum PCI
+d$delta.pci <- d$ideal.pci - d$total.pci #Difference
+d$delta.over.cost <- d$delta.pci / d$ExtendedCo #One cost measure
+aggregate(delta.over.cost ~ PlanActivi, d, mean ) # Crack Seal is crazy cost efficient
+aggregate(delta.over.cost ~ PlanActivi, d, max ) # Crack Seal is crazy cost efficient
 
-my.df$cost.per.sq.yd <- my.df$ExtendedCo / my.df$sq.yd
+d$cost.per.sq.yd <- d$ExtendedCo / d$sq.yd # Cost per sq yard
 
 
 # Here I model the age as a function of PCI based on the references below:
@@ -25,31 +26,36 @@ my.df$cost.per.sq.yd <- my.df$ExtendedCo / my.df$sq.yd
 # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
 # PCI = 100 - (106/((ln(79/AGE))^(1/.48)))
 
-my.df$est.years <- 79*(2.71828^(-9.37879/(100-my.df$OCI)^0.48))
-plot(my.df$est.years, my.df$OCI)
+d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
+plot(d$est.years, d$OCI)
 
-my.df$last.paved <- 2012 - my.df$est.years
-hist(my.df$last.paved) # I'm skeptical there are streets we have not paved since the 80s
+d$last.paved <- 2012 - d$est.years
+hist(d$last.paved) # I'm skeptical there are streets we have not paved since the 80s
 
 
 # test
-plot(log(my.df$ExtendedCo), my.df$OCI)
-plot(my.df$delta.over.cost, my.df$OCI) # checking cost-effectiveness
-fit <- lm(my.df$delta.over.cost, my.df$OCI)
-
+plot(log(d$ExtendedCo), d$OCI)
+plot(d$delta.over.cost, d$OCI) # checking cost-effectiveness
+# This final plot is where we see that high OCI maintenance is the most cost-effective
 
 # First model cost as a f(PCI) using logical tests: 
 # this averages differences between collectors and arterials
 # To see where the bands begin and end
-aggregate(OCI ~ PlanActivi, my.df, mean )
-aggregate(OCI ~ PlanActivi, my.df, min )
-aggregate(OCI ~ PlanActivi, my.df, max )
+aggregate(OCI ~ PlanActivi, d, mean )
+aggregate(OCI ~ PlanActivi, d, min )
+aggregate(OCI ~ PlanActivi, d, max )
 
-my.df$cost.per.sq.yd.boolean <- ifelse((my.df$OCI > 67) & (my.df$OCI < 89), 1.8,
-                            ifelse((my.df$OCI > 44) & (my.df$OCI < 67), 18.50,
-                            ifelse((my.df$OCI > 23) & (my.df$OCI < 44), 83.50,
-                                   ifelse((my.df$OCI > 0) & (my.df$OCI < 23), 150,
-                                          ifelse(my.df$OCI > 89, 0, 360)))))
+d$cost.per.sq.yd.boolean <- ifelse((d$OCI > 67) & (d$OCI < 89), 1.8,
+                            ifelse((d$OCI > 44) & (d$OCI < 67), 18.50,
+                            ifelse((d$OCI > 23) & (d$OCI < 44), 83.50,
+                                   ifelse((d$OCI > 0) & (d$OCI < 23), 150,
+                                          ifelse(d$OCI > 89, 0, 360)))))
+
+# Test
+plot(d$cost.per.sq.yd.boolean*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
+plot(log(d$cost.per.sq.yd.boolean*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
+# d$dif <- d$cost.per.sq.yd*d$sq.yd - d$cost.per.sq.yd.boolean*d$sq.yd  
+# hugeDif <- d[ which(d$dif>650000 | d$dif < -115000), ]
 
 
 
@@ -59,8 +65,8 @@ my.df$cost.per.sq.yd.boolean <- ifelse((my.df$OCI > 67) & (my.df$OCI < 89), 1.8,
 
 ####  Use the empirical distribution of PCI ####
 # http://davetang.org/muse/2013/05/09/on-curve-fitting/
-y = my.df$cost.per.sq.yd 
-x = my.df$OCI
+y = d$cost.per.sq.yd 
+x = d$OCI
 plot(x,y)
 
 #fit first degree polynomial equation:
@@ -83,18 +89,20 @@ lines(xx, predict(fit4, data.frame(x=xx)), col="purple") ## This looks like the 
 #y=e + dx + cx^2 + bx^3 + ax^4 
 coef(fit4)
 
-my.df$cost.model <- 1.351524e+02 + (1.845730e+00 * my.df$OCI) +  
-  (-1.630135e-01 * my.df$OCI^2) + 
-  (2.195987e-03 * my.df$OCI^3) + 
-  (-8.857414e-06 * my.df$OCI^4) 
+d$cost.model <- 1.351524e+02 + (1.845730e+00 * d$OCI) +  
+  (-1.630135e-01 * d$OCI^2) + 
+  (2.195987e-03 * d$OCI^3) + 
+  (-8.857414e-06 * d$OCI^4) 
 
 
-fit <- lm(my.df$cost.model,my.df$cost.per.sq.yd)
+fit <- lm(d$cost.model,d$cost.per.sq.yd)
 summary(fit) # show results
 
 # Visualize
-plot(my.df$cost.model*my.df$sq.yd, my.df$cost.per.sq.yd*my.df$sq.yd)
-plot(log(my.df$cost.model*my.df$sq.yd), log(my.df$cost.per.sq.yd*my.df$sq.yd))
+plot(d$cost.model*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
+plot(log(d$cost.model*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
+
+# Damn, nothing seems to model the cliffs correctly
 
 
 
@@ -118,17 +126,17 @@ my.theme <-
 
 
 # A simple method is to use the "weight" function with qplot. This will even work with aggregate
-p <- qplot(PlanActivi, weight = Length, data = my.df, geom = "bar", alpha=I(.7), main="Activity by Length", ylab="Col2 Count")
+p <- qplot(PlanActivi, weight = Length, data = d, geom = "bar", alpha=I(.7), main="Activity by Length", ylab="Col2 Count")
 p + my.theme
 
-p <- qplot(Treatmentb, weight = Length, data = my.df, geom = "bar", alpha=I(.7), main="Activity by Length", ylab="Col2 Count")
+p <- qplot(Treatmentb, weight = Length, data = d, geom = "bar", alpha=I(.7), main="Activity by Length", ylab="Col2 Count")
 p + my.theme
 
-p <- qplot(OCI, weight = Length, data = my.df, colour = "white", fill=Treatmentb, geom = "bar", main="PCI by Length", ylab="Length of Roadway")
+p <- qplot(OCI, weight = Length, data = d, colour = "white", fill=Treatmentb, geom = "bar", main="PCI by Length", ylab="Length of Roadway")
 p + my.theme
 
 
-ag <- aggregate(OCI ~ PlanActivi, my.df, mean )
+ag <- aggregate(OCI ~ PlanActivi, d, mean )
 p <- qplot(PlanActivi, weight = OCI, data = ag, geom = "bar", alpha=I(.7), main="Activity by Avg PCI", ylab="PCI")
 p + my.theme
 
