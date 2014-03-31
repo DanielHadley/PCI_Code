@@ -45,64 +45,77 @@ aggregate(OCI ~ PlanActivi, d, mean )
 aggregate(OCI ~ PlanActivi, d, min )
 aggregate(OCI ~ PlanActivi, d, max )
 
-d$cost.per.sq.yd.boolean <- ifelse((d$OCI > 67) & (d$OCI < 89), 1.8,
-                            ifelse((d$OCI > 44) & (d$OCI < 67), 18.50,
-                            ifelse((d$OCI > 23) & (d$OCI < 44), 83.50,
-                                   ifelse((d$OCI > 0) & (d$OCI < 23), 150,
-                                          ifelse(d$OCI > 89, 0, 360)))))
+d$cost.per.sq.yd.conditional <- ifelse((d$OCI >= 68) & (d$OCI < 88), 1.8,
+                            ifelse((d$OCI >= 47) & (d$OCI < 68), 18.50,
+                            ifelse((d$OCI >= 25) & (d$OCI < 47) & (d$Functional == "RT - Residential Local"), 76.80,
+                            ifelse((d$OCI >= 25) & (d$OCI < 47) & (d$Functional == "RE - Residential Dead End"), 76.80,
+                            ifelse((d$OCI >= 25) & (d$OCI < 47) & (d$Functional == "CO - Collector" ), 91.10,
+                            ifelse((d$OCI >= 25) & (d$OCI < 47) & (d$Functional == "AR - Arterial"), 91.10,
+                            ifelse((d$OCI >= 0) & (d$OCI < 25) & (d$Functional == "RT - Residential Local"), 139.80,
+                            ifelse((d$OCI >= 0) & (d$OCI < 25) & (d$Functional == "RE - Residential Dead End"), 139.80,
+                            ifelse((d$OCI >= 0) & (d$OCI < 25) & (d$Functional == "CO - Collector"), 147.70,
+                            ifelse((d$OCI >= 0) & (d$OCI < 25) & (d$Functional == "AR - Arterial"), 162.10,
+                            ifelse(d$OCI >= 88, 0, 360)))))))))))
 
 # Test
-plot(d$cost.per.sq.yd.boolean*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
-plot(log(d$cost.per.sq.yd.boolean*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
-# d$dif <- d$cost.per.sq.yd*d$sq.yd - d$cost.per.sq.yd.boolean*d$sq.yd  
+plot(d$cost.per.sq.yd.conditional*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
+plot(log(d$cost.per.sq.yd.conditional*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
+# d$dif <- d$cost.per.sq.yd*d$sq.yd - d$cost.per.sq.yd.conditional*d$sq.yd  
 # hugeDif <- d[ which(d$dif>650000 | d$dif < -115000), ]
 
 
 
-# Now model the cost degredation as a f(PCI) using a smooth curve
-# This smooths out all of the "cliffs" from the difference maintenance bands, 
-# but it approximates how quickly costs escalate as a f of PCI and allows for linear optimization
+# # Now model the cost degredation as a f(PCI) using a smooth curve
+# # This smooths out all of the "cliffs" from the difference maintenance bands, 
+# # but it approximates how quickly costs escalate as a f of PCI and allows for linear optimization
+# 
+# ####  Use the empirical distribution of PCI ####
+# # http://davetang.org/muse/2013/05/09/on-curve-fitting/
+# y = d$cost.per.sq.yd 
+# x = d$OCI
+# plot(x,y)
+# 
+# #fit first degree polynomial equation:
+# fit  <- lm(y~x)
+# #second degree
+# fit2 <- lm(y~poly(x,2,raw=TRUE))
+# #third degree
+# fit3 <- lm(y~poly(x,3,raw=TRUE))
+# #fourth degree
+# fit4 <- lm(y~poly(x,4,raw=TRUE))
+# #generate range of 50 numbers starting from 30 and ending at 160
+# xx <- seq(0,160, length=50)
+# plot(x,y,pch=19,ylim=c(0,150))
+# lines(xx, predict(fit, data.frame(x=xx)), col="red")
+# lines(xx, predict(fit2, data.frame(x=xx)), col="green")
+# lines(xx, predict(fit3, data.frame(x=xx)), col="blue")
+# lines(xx, predict(fit4, data.frame(x=xx)), col="purple") ## This looks like the best fit
+# 
+# # Now model it based on the coefficients from fit4
+# #y=e + dx + cx^2 + bx^3 + ax^4 
+# coef(fit4)
+# 
+# d$cost.model <- 1.351524e+02 + (1.845730e+00 * d$OCI) +  
+#   (-1.630135e-01 * d$OCI^2) + 
+#   (2.195987e-03 * d$OCI^3) + 
+#   (-8.857414e-06 * d$OCI^4) 
+# 
+# 
+# fit <- lm(d$cost.model,d$cost.per.sq.yd)
+# summary(fit) # show results
+# 
+# # Visualize
+# plot(d$cost.model*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
+# plot(log(d$cost.model*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
+# 
+# # Damn, nothing seems to model the cliffs correctly
 
-####  Use the empirical distribution of PCI ####
-# http://davetang.org/muse/2013/05/09/on-curve-fitting/
-y = d$cost.per.sq.yd 
-x = d$OCI
-plot(x,y)
-
-#fit first degree polynomial equation:
-fit  <- lm(y~x)
-#second degree
-fit2 <- lm(y~poly(x,2,raw=TRUE))
-#third degree
-fit3 <- lm(y~poly(x,3,raw=TRUE))
-#fourth degree
-fit4 <- lm(y~poly(x,4,raw=TRUE))
-#generate range of 50 numbers starting from 30 and ending at 160
-xx <- seq(0,160, length=50)
-plot(x,y,pch=19,ylim=c(0,150))
-lines(xx, predict(fit, data.frame(x=xx)), col="red")
-lines(xx, predict(fit2, data.frame(x=xx)), col="green")
-lines(xx, predict(fit3, data.frame(x=xx)), col="blue")
-lines(xx, predict(fit4, data.frame(x=xx)), col="purple") ## This looks like the best fit
-
-# Now model it based on the coefficients from fit4
-#y=e + dx + cx^2 + bx^3 + ax^4 
-coef(fit4)
-
-d$cost.model <- 1.351524e+02 + (1.845730e+00 * d$OCI) +  
-  (-1.630135e-01 * d$OCI^2) + 
-  (2.195987e-03 * d$OCI^3) + 
-  (-8.857414e-06 * d$OCI^4) 
 
 
-fit <- lm(d$cost.model,d$cost.per.sq.yd)
-summary(fit) # show results
 
-# Visualize
-plot(d$cost.model*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
-plot(log(d$cost.model*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
-
-# Damn, nothing seems to model the cliffs correctly
+###  Model the Pavement decisions over 20 years ###
+dm <- d # dm = data model
+dm <- subset(dm, select = c(FID, Functional, STREETNAME, OCI, sq.yd)) #OR
 
 
 
