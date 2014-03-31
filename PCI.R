@@ -118,6 +118,14 @@ dm <- d # dm = data model
 dm <- subset(dm, select = c(FID, Functional, STREETNAME, OCI, sq.yd)) #OR
 
 
+# Just a test
+myfunction <- function(x){
+  dm$pave <- sample(c(1,2), 573, replace = TRUE)
+  statementOne <- x * dm$pave
+  statements <- mean(statementOne)
+  result <- print(statements)
+  return(result)
+}
 
 
 
