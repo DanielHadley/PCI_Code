@@ -115,8 +115,8 @@ plot(log(d$cost.per.sq.yd.conditional*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
 
 
 ###  Model the Pavement decisions over 20 years ###
-dm <- d # dm = data model
-dm <- subset(dm, select = c(FID, Functional, STREETNAME, OCI, sq.yd)) #OR
+# dm <- d # dm = data model
+# dm <- subset(dm, select = c(FID, Functional, STREETNAME, OCI, sq.yd)) #OR
 
 # First I create functions that describe the relationships analyzed previously
 # f(Age) = PCI 
@@ -141,17 +141,38 @@ Costf <- function(OCI, Functional, sq.yd){
   return(Cost*sq.yd)
 }
 
-# f(year) = backlog
-myfunction <- function(year){
-  d$pave <- sample(c(0,1), 573, replace = TRUE)
-  d$AgeA <- ifelse(d$pave == 1, 1, year + 1)
-  d$OCIA <- ifelse(d$pave == 1, 93, 0)
-  cost <- CostF(d$OCIA, d$Functional, d$sq.yd)
+
+
+# f(pave) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
+myfunction <- function(pave){
+  d$OCI <- PCIf(d$est.years)
+  cost <- Costf(d$OCI, d$Functional, d$sq.yd)
   backlog <- sum(cost)
-  return(backlog)
+  d$Age.a <- ifelse(pave == 1, 1, 1 + d$est.years)
+  d$OCI.a <- PCIf(d$Age.a)
+  cost.to.pave.a <- ifelse(pave == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
+  t.cost.to.pave.a <- sum(cost.to.pave.a)
+  cost.a <- Costf(d$OCI.a, d$Functional, d$sq.yd)
+  backlog.a <- sum(cost.a)
+  benefit.to.cost <- (backlog - backlog.a)/t.cost.to.pave.a 
+  output <- list(backlog.a, t.cost.to.pave.a, benefit.to.cost)
+  return(output)
 }
 
-myfunction(d$est.years)
+
+d$pave <- sample(c(0,1), 573, replace = TRUE) #random
+
+d$pave <- ifelse(d$OCI > 60, 1,0)
+
+myfunction(d$pave)
+
+
+
+
+
+
+
+
 
 ###  Visualize ###
 library(ggplot2)
