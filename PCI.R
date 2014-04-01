@@ -4,6 +4,7 @@
 # Created By Daniel Hadley
 
 setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
+# setwd ("~/Documents/Git/PCI_Code") #at home
 d <- read.csv("PCI.csv")
 
 # Create new variables 
@@ -117,17 +118,40 @@ plot(log(d$cost.per.sq.yd.conditional*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
 dm <- d # dm = data model
 dm <- subset(dm, select = c(FID, Functional, STREETNAME, OCI, sq.yd)) #OR
 
-
-# Just a test
-myfunction <- function(x){
-  dm$pave <- sample(c(1,2), 573, replace = TRUE)
-  statementOne <- x * dm$pave
-  statements <- mean(statementOne)
-  result <- print(statements)
-  return(result)
+# First I create functions that describe the relationships analyzed previously
+# f(Age) = PCI 
+PCIf <- function(AGE){ 
+  PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
+  return(PCI)
 }
 
+# f(PCI) = Cost 
+Costf <- function(OCI, Functional, sq.yd){ 
+  Cost <- ifelse((OCI >= 68) & (OCI < 88), 1.8,
+         ifelse((OCI >= 47) & (OCI < 68), 18.50,
+                ifelse((OCI >= 25) & (OCI < 47) & (Functional == "RT - Residential Local"), 76.80,
+                       ifelse((OCI >= 25) & (OCI < 47) & (Functional == "RE - Residential Dead End"), 76.80,
+                              ifelse((OCI >= 25) & (OCI < 47) & (Functional == "CO - Collector" ), 91.10,
+                                     ifelse((OCI >= 25) & (OCI < 47) & (Functional == "AR - Arterial"), 91.10,
+                                            ifelse((OCI >= 0) & (OCI < 25) & (Functional == "RT - Residential Local"), 139.80,
+                                                   ifelse((OCI >= 0) & (OCI < 25) & (Functional == "RE - Residential Dead End"), 139.80,
+                                                          ifelse((OCI >= 0) & (OCI < 25) & (Functional == "CO - Collector"), 147.70,
+                                                                 ifelse((OCI >= 0) & (OCI < 25) & (Functional == "AR - Arterial"), 162.10,
+                                                                        ifelse(OCI >= 88, 0, 360)))))))))))
+  return(Cost*sq.yd)
+}
 
+# f(year) = backlog
+myfunction <- function(year){
+  d$pave <- sample(c(0,1), 573, replace = TRUE)
+  d$AgeA <- ifelse(d$pave == 1, 1, year + 1)
+  d$OCIA <- ifelse(d$pave == 1, 93, 0)
+  cost <- CostF(d$OCIA, d$Functional, d$sq.yd)
+  backlog <- sum(cost)
+  return(backlog)
+}
+
+myfunction(d$est.years)
 
 ###  Visualize ###
 library(ggplot2)
