@@ -162,7 +162,13 @@ myfunction <- function(pave){
 
 d$pave <- sample(c(0,1), 573, replace = TRUE) #random
 
-d$pave <- ifelse(d$OCI > 60, 1,0)
+d$pave <- ifelse(d$OCI < 25, 1,0) # all the worst
+
+d$pave <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
+                 ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
+                        ifelse(d$OCI == 47, 1, 0)))) # Top tiers
+
+                 
 
 myfunction(d$pave)
 
