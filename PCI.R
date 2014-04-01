@@ -211,6 +211,59 @@ myfunction(d$pave, d$pave.b)
 
 
 
+
+# f(pave) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
+myfunction <- function(pave, pave.b, pave.c){
+  d$OCI <- PCIf(d$est.years)
+  cost <- Costf(d$OCI, d$Functional, d$sq.yd)
+  backlog <- sum(cost)
+  d$Age.a <- ifelse(pave == 1, 1, 1 + d$est.years)
+  d$OCI.a <- PCIf(d$Age.a)
+  cost.to.pave.a <- ifelse(pave == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
+  t.cost.to.pave.a <- sum(cost.to.pave.a)
+  cost.a <- Costf(d$OCI.a, d$Functional, d$sq.yd)
+  backlog.a <- sum(cost.a)
+  d$Age.b <- ifelse(pave.b == 1, 1, 1 + d$Age.a)
+  d$OCI.b <- PCIf(d$Age.b)
+  cost.to.pave.b <- ifelse(pave.b == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
+  t.cost.to.pave.b <- sum(cost.to.pave.b)
+  cost.b <- Costf(d$OCI.b, d$Functional, d$sq.yd)
+  backlog.b <- sum(cost.b)
+  d$Age.c <- ifelse(d$pave.c == 1, 1, 2 + d$Age.a)
+  d$OCI.c <- PCIf(d$Age.c)
+  cost.to.pave.c <- ifelse(pave.c == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
+  t.cost.to.pave.c <- sum(cost.to.pave.c)
+  cost.c <- Costf(d$OCI.c, d$Functional, d$sq.yd)
+  backlog.c <- sum(cost.c)
+  benefit.to.cost <- (backlog - backlog.c)/(t.cost.to.pave.a + t.cost.to.pave.b + t.cost.to.pave.c)
+  output <- list(backlog.b, benefit.to.cost)
+  return(output)
+}
+
+
+d$pave <- ifelse(d$OCI < 25, 1,0) # all the worst
+
+d$pave.b <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
+                    ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
+                           ifelse(d$OCI == 47, 1, 0)))) # Top tiers
+
+d$pave.c <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
+                    ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
+                           ifelse(d$OCI == 47, 1, 0)))) # Top tiers
+
+
+
+myfunction(d$pave, d$pave.b, d$pave.c.)
+
+
+
+
+
+
+
+
+
+
 ###  Visualize ###
 library(ggplot2)
 
