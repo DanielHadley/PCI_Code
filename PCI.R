@@ -142,6 +142,52 @@ Costf <- function(OCI, Functional, sq.yd){
 }
 
 
+# f(PCI) = Whether or Not to Pave
+# Here is where we set the rules and try different scenarios
+Pavef <- function(OCI){
+  pave <- (ifelse((OCI >= 68) & (OCI < 88), 1,
+                  ifelse((OCI >= 47) & (OCI < 68), 1,
+                         ifelse(OCI == 47, 1, 0)))) # Top tiers
+  return(pave)
+}
+
+## Now the model
+d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
+  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
+  d$Pave.a <- Pavef(d$OCI.Model) # Decision to pave based on Pavef function
+  d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
+  d$OCI.a <- PCIf(d$Age.a) # OCI year n  
+  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.b <- Pavef(d$OCI.a) # Decision to pave based on Pavef function
+  d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
+  d$OCI.b <- PCIf(d$Age.b) # OCI year n  
+  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.c <- Pavef(d$OCI.b) # Decision to pave based on Pavef function
+  d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
+  d$OCI.c <- PCIf(d$Age.c) # OCI year n  
+  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.d <- Pavef(d$OCI.c) # Decision to pave based on Pavef function
+  d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
+  d$OCI.d <- PCIf(d$Age.d) # OCI year n  
+  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.e <- Pavef(d$OCI.d) # Decision to pave based on Pavef function
+  d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
+  d$OCI.e <- PCIf(d$Age.e) # OCI year n  
+  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n
+
+
+
+
+
+
+
+
+
 
 # f(pave) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
 myfunction <- function(pave){
