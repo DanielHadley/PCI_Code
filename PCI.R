@@ -144,14 +144,20 @@ Costf <- function(OCI, Functional, sq.yd){
 
 # f(PCI) = Whether or Not to Pave
 # Here is where we set the rules and try different scenarios
+# Pavef <- function(OCI){
+#   pave <- (ifelse((OCI >= 68) & (OCI < 88), 1,
+#                   ifelse((OCI >= 47) & (OCI < 68), 1,
+#                          ifelse(OCI == 47, 1, 0)))) # Top tiers
+#   return(pave)
+# }
+
 Pavef <- function(OCI){
-  pave <- (ifelse((OCI >= 68) & (OCI < 88), 1,
-                  ifelse((OCI >= 47) & (OCI < 68), 1,
-                         ifelse(OCI == 47, 1, 0)))) # Top tiers
+  pave <- (ifelse((OCI <= 20), 1,0))
   return(pave)
 }
 
 ## Now the model
+# There is probably a more elegant way to loop this, but here it is
 d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
   d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
   d$Pave.a <- Pavef(d$OCI.Model) # Decision to pave based on Pavef function
@@ -182,8 +188,12 @@ d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Ba
 
 
 
+# f(model) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
+Modelf <- function(backlog){
+  sum(backlog)
+}
 
-
+Modelf(d$backlog.e)
 
 
 
