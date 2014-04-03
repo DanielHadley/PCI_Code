@@ -144,24 +144,40 @@ Costf <- function(OCI, Functional, sq.yd){
 
 # f(PCI) = Whether or Not to Pave
 # Here is where we set the rules and try different scenarios
-# Pavef <- function(OCI){
-#   pave <- (ifelse((OCI >= 68) & (OCI < 88), 1,
-#                   ifelse((OCI >= 47) & (OCI < 68), 1,
-#                          ifelse(OCI == 47, 1, 0)))) # Top tiers
-#   return(pave)
-# }
+# This scenario is random with no bottom tiers
+Pavef <- function(OCI){
+  pave <- (ifelse((OCI >= 68) & (OCI < 88), 1,
+                  ifelse((OCI >= 47) & (OCI < 68), 1,
+                         ifelse(OCI == 47, 1, 0)))) # Top tiers
+  return(pave)
+}
 
-# Pavef <- function(OCI){
-#   pave <- (ifelse((OCI <= 20), 1,0))
-#   return(pave)
-# }
-
+# This scenario is totally random
 Pavef <- function(OCI){
   pave <-  sample(c(0,1), 573, replace = TRUE) #random
   return(pave)
 }
 
-# f(n) = backlog
+# Worst - first
+Pavef <- function(OCI){
+  pave <- (ifelse((OCI <= 15),(sample(0:1,2)),0))
+  return(pave)
+}
+
+# Best - first
+Pavef <- function(OCI){
+  pave <- (ifelse((OCI >= 42),(sample(0:1,2)),0))
+  return(pave)
+}
+
+# Best - first non stochastic
+Pavef <- function(OCI){
+  pave <- (ifelse((OCI >= 58),1,0))
+  return(pave)
+}
+
+
+# f(n) = output
 Modelf <- function(n){
     d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
     d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
@@ -193,174 +209,27 @@ Modelf <- function(n){
 #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
-  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c)
+  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
   benefit.to.cost <- backlog.reduction / total.cost
-output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost)
+  average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
+                            (sum(d$cost.d)) + (sum(d$cost.e))) / 5
+  first.year <- sum(d$cost.a)
+output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, average.annual.cost, first.year)
 return(output)
 }
 
-# One solution
+# Now run the function X number of times
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
-l <- alply(cbind(rep(10000,10000),rep(20,10)),1,Modelf)
-backlog <- data.frame(matrix(unlist(l), nrow=10000, byrow=T))
-colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost")
+l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
+backlog <- data.frame(matrix(unlist(l), nrow=1000, byrow=T))
+colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
+                       "average.annual.cost", "first.year")
 
 hist(backlog$benefit.to.cost)
-
-## Now the model
-# There is probably a more elegant way to loop this, but here it is
-d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-  d$Pave.a <- Pavef(d$OCI.Model) # Decision to pave based on Pavef function
-  d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
-  d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.b <- Pavef(d$OCI.a) # Decision to pave based on Pavef function
-  d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
-  d$OCI.b <- PCIf(d$Age.b) # OCI year n  
-  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.c <- Pavef(d$OCI.b) # Decision to pave based on Pavef function
-  d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
-  d$OCI.c <- PCIf(d$Age.c) # OCI year n  
-  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.d <- Pavef(d$OCI.c) # Decision to pave based on Pavef function
-  d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
-  d$OCI.d <- PCIf(d$Age.d) # OCI year n  
-  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.e <- Pavef(d$OCI.d) # Decision to pave based on Pavef function
-  d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
-  d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n
+hist(backlog$average.annual.cost)
 
 
 
-# f(model) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
-Modelf <- function(backlog){
-  sum(backlog)
-}
-
-Modelf(d$backlog.e)
-
-
-
-
-
-# f(pave) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
-myfunction <- function(pave){
-  d$OCI <- PCIf(d$est.years)
-  cost <- Costf(d$OCI, d$Functional, d$sq.yd)
-  backlog <- sum(cost)
-  d$Age.a <- ifelse(pave == 1, 1, 1 + d$est.years)
-  d$OCI.a <- PCIf(d$Age.a)
-  cost.to.pave.a <- ifelse(pave == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
-  t.cost.to.pave.a <- sum(cost.to.pave.a)
-  cost.a <- Costf(d$OCI.a, d$Functional, d$sq.yd)
-  backlog.a <- sum(cost.a)
-  benefit.to.cost <- (backlog - backlog.a)/t.cost.to.pave.a 
-  output <- list(backlog.a, t.cost.to.pave.a, benefit.to.cost)
-  return(output)
-}
-
-
-d$pave <- sample(c(0,1), 573, replace = TRUE) #random
-
-d$pave <- ifelse(d$OCI < 25, 1,0) # all the worst
-
-d$pave <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
-                 ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
-                        ifelse(d$OCI == 47, 1, 0)))) # Top tiers
-
-                 
-
-myfunction(d$pave)
-
-
-
-
-
-# f(pave) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
-myfunction <- function(pave, pave.b){
-  d$OCI <- PCIf(d$est.years)
-  cost <- Costf(d$OCI, d$Functional, d$sq.yd)
-  backlog <- sum(cost)
-  d$Age.a <- ifelse(pave == 1, 1, 1 + d$est.years)
-  d$OCI.a <- PCIf(d$Age.a)
-  cost.to.pave.a <- ifelse(pave == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
-  t.cost.to.pave.a <- sum(cost.to.pave.a)
-  cost.a <- Costf(d$OCI.a, d$Functional, d$sq.yd)
-  backlog.a <- sum(cost.a)
-  d$Age.b <- ifelse(pave.b == 1, 1, 1 + d$Age.a)
-  d$OCI.b <- PCIf(d$Age.b)
-  cost.to.pave.b <- ifelse(pave.b == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
-  t.cost.to.pave.b <- sum(cost.to.pave.b)
-  cost.b <- Costf(d$OCI.b, d$Functional, d$sq.yd)
-  backlog.b <- sum(cost.b)
-  benefit.to.cost <- (backlog - backlog.b)/(t.cost.to.pave.a + t.cost.to.pave.b)
-  output <- list(backlog.b, benefit.to.cost)
-  return(output)
-}
-
-
-d$pave <- ifelse(d$OCI < 25, 1,0) # all the worst
-
-d$pave.b <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
-                  ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
-                         ifelse(d$OCI == 47, 1, 0)))) # Top tiers
-
-
-
-myfunction(d$pave, d$pave.b)
-
-
-
-
-# f(pave) = backlog, Total Cost to Pave, Benefit-To-Cost Ratio
-myfunction <- function(pave, pave.b, pave.c){
-  d$OCI <- PCIf(d$est.years)
-  cost <- Costf(d$OCI, d$Functional, d$sq.yd)
-  backlog <- sum(cost)
-  d$Age.a <- ifelse(pave == 1, 1, 1 + d$est.years)
-  d$OCI.a <- PCIf(d$Age.a)
-  cost.to.pave.a <- ifelse(pave == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
-  t.cost.to.pave.a <- sum(cost.to.pave.a)
-  cost.a <- Costf(d$OCI.a, d$Functional, d$sq.yd)
-  backlog.a <- sum(cost.a)
-  d$Age.b <- ifelse(pave.b == 1, 1, 1 + d$Age.a)
-  d$OCI.b <- PCIf(d$Age.b)
-  cost.to.pave.b <- ifelse(pave.b == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
-  t.cost.to.pave.b <- sum(cost.to.pave.b)
-  cost.b <- Costf(d$OCI.b, d$Functional, d$sq.yd)
-  backlog.b <- sum(cost.b)
-  d$Age.c <- ifelse(d$pave.c == 1, 1, 2 + d$Age.a)
-  d$OCI.c <- PCIf(d$Age.c)
-  cost.to.pave.c <- ifelse(pave.c == 1, Costf(d$OCI,d$Functional, d$sq.yd),0)
-  t.cost.to.pave.c <- sum(cost.to.pave.c)
-  cost.c <- Costf(d$OCI.c, d$Functional, d$sq.yd)
-  backlog.c <- sum(cost.c)
-  benefit.to.cost <- (backlog - backlog.c)/(t.cost.to.pave.a + t.cost.to.pave.b + t.cost.to.pave.c)
-  output <- list(backlog.b, benefit.to.cost)
-  return(output)
-}
-
-
-d$pave <- ifelse(d$OCI < 25, 1,0) # all the worst
-
-d$pave.b <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
-                    ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
-                           ifelse(d$OCI == 47, 1, 0)))) # Top tiers
-
-d$pave.c <- (ifelse((d$OCI >= 68) & (d$OCI < 88), 1,
-                    ifelse((d$OCI >= 47) & (d$OCI < 68), 1,
-                           ifelse(d$OCI == 47, 1, 0)))) # Top tiers
-
-
-
-myfunction(d$pave, d$pave.b, d$pave.c.)
 
 
 
