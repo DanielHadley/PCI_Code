@@ -190,16 +190,22 @@ Modelf <- function(n){
     d$OCI.e <- PCIf(d$Age.e) # OCI year n  
     d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n    
-  output <- sum(d$backlog.e)
+#   Now create the outputs
+  backlog <- sum(d$backlog.e)
+  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
+  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c)
+  benefit.to.cost <- backlog.reduction / total.cost
+output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost)
 return(output)
 }
 
 # One solution
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
-l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
+l <- alply(cbind(rep(10000,10000),rep(20,10)),1,Modelf)
+backlog <- data.frame(matrix(unlist(l), nrow=10000, byrow=T))
+colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost")
 
-backlog <- data.frame(matrix(unlist(l), nrow=1000, byrow=T))
-
+hist(backlog$benefit.to.cost)
 
 ## Now the model
 # There is probably a more elegant way to loop this, but here it is
