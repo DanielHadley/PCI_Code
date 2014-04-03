@@ -66,57 +66,12 @@ plot(log(d$cost.per.sq.yd.conditional*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
 
 
 
-# # Now model the cost degredation as a f(PCI) using a smooth curve
-# # This smooths out all of the "cliffs" from the difference maintenance bands, 
-# # but it approximates how quickly costs escalate as a f of PCI and allows for linear optimization
-# 
-# ####  Use the empirical distribution of PCI ####
-# # http://davetang.org/muse/2013/05/09/on-curve-fitting/
-# y = d$cost.per.sq.yd 
-# x = d$OCI
-# plot(x,y)
-# 
-# #fit first degree polynomial equation:
-# fit  <- lm(y~x)
-# #second degree
-# fit2 <- lm(y~poly(x,2,raw=TRUE))
-# #third degree
-# fit3 <- lm(y~poly(x,3,raw=TRUE))
-# #fourth degree
-# fit4 <- lm(y~poly(x,4,raw=TRUE))
-# #generate range of 50 numbers starting from 30 and ending at 160
-# xx <- seq(0,160, length=50)
-# plot(x,y,pch=19,ylim=c(0,150))
-# lines(xx, predict(fit, data.frame(x=xx)), col="red")
-# lines(xx, predict(fit2, data.frame(x=xx)), col="green")
-# lines(xx, predict(fit3, data.frame(x=xx)), col="blue")
-# lines(xx, predict(fit4, data.frame(x=xx)), col="purple") ## This looks like the best fit
-# 
-# # Now model it based on the coefficients from fit4
-# #y=e + dx + cx^2 + bx^3 + ax^4 
-# coef(fit4)
-# 
-# d$cost.model <- 1.351524e+02 + (1.845730e+00 * d$OCI) +  
-#   (-1.630135e-01 * d$OCI^2) + 
-#   (2.195987e-03 * d$OCI^3) + 
-#   (-8.857414e-06 * d$OCI^4) 
-# 
-# 
-# fit <- lm(d$cost.model,d$cost.per.sq.yd)
-# summary(fit) # show results
-# 
-# # Visualize
-# plot(d$cost.model*d$sq.yd, d$cost.per.sq.yd*d$sq.yd)
-# plot(log(d$cost.model*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
-# 
-# # Damn, nothing seems to model the cliffs correctly
+  
 
 
 
 
 ###  Model the Pavement decisions over 20 years ###
-# dm <- d # dm = data model
-# dm <- subset(dm, select = c(FID, Functional, STREETNAME, OCI, sq.yd)) #OR
 
 # First I create functions that describe the relationships analyzed previously
 # f(Age) = PCI 
@@ -166,7 +121,7 @@ Pavef <- function(OCI){
 
 # Best - first
 Pavef <- function(OCI){
-  pave <- (ifelse((OCI >= 42),(sample(0:1,2)),0))
+  pave <- (ifelse((OCI >= 40),(sample(0:1,2)),0))
   return(pave)
 }
 
