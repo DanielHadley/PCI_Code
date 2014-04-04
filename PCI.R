@@ -11,7 +11,7 @@ d <- read.csv("PCI.csv")
 d$sq.ft <- d$PavementWi * d$Length # Sq. Feet
 d$sq.yd <- d$sq.ft * 0.111111 # Sq. Yards
 d$total.pci <- d$sq.yd * d$OCI # Sum PCI
-d$ideal.pci <- d$sq.yd * 95 # Ideal sum PCI
+d$ideal.pci <- d$sq.yd * 100 # Ideal sum PCI
 d$delta.pci <- d$ideal.pci - d$total.pci #Difference
 d$delta.over.cost <- d$delta.pci / d$ExtendedCo #One cost measure
 aggregate(delta.over.cost ~ PlanActivi, d, mean ) # Crack Seal is crazy cost efficient
@@ -95,6 +95,18 @@ Costf <- function(OCI, Functional, sq.yd){
                                                                         ifelse(OCI >= 88, 0, 360)))))))))))
   return(Cost*sq.yd)
 }
+
+library("adagio") # for the knapsack algo
+# will need more mem for knapsack
+
+# Here is where I attempt to create a model that includes the Knapsack algo
+d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
+d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
+Pave.a <- knapsack(d$backlog, d$delta.pci, 400000) # Decision to pave based on Pavef function
+d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
+d$OCI.a <- PCIf(d$Age.a) # OCI year n  
+d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
 
 
 
