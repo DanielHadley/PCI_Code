@@ -71,7 +71,7 @@ plot(log(d$cost.per.sq.yd.conditional*d$sq.yd), log(d$cost.per.sq.yd*d$sq.yd))
 
 
 
-###  Model the Pavement decisions over 20 years ###
+###  Model the Pavement decisions over 20 years ####
 
 # First I create functions that describe the relationships analyzed previously
 # f(Age) = PCI 
@@ -97,6 +97,9 @@ Costf <- function(OCI, Functional, sq.yd){
 }
 
 
+
+# Here is where I attempt to create a stochastic model ####
+# The problem is that it's difficult to set the limit on spending, particularly in years  1 & 
 # f(PCI) = Whether or Not to Pave
 # Here is where we set the rules and try different scenarios
 # This scenario is random with no bottom tiers
@@ -164,6 +167,7 @@ return(output)
 
 # Now run the function X number of times
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
+library("plyr")
 l <- alply(cbind(rep(100,100),rep(20,10)),1,Modelf)
 backlog <- data.frame(matrix(unlist(l), nrow=100, byrow=T))
 colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
@@ -175,65 +179,7 @@ hist(backlog$total.cost)
 hist(backlog$first.year) # The first year is always the highest cost
 
 
-
-
-
-
-
-
-
-
-
-
-
-# This scenario is totally random
-Pavef <- function(OCI){ repeat {
-  # do something
-  pave <-  sample(c(0,1), 573, replace = TRUE) #random
-  # exit if the condition is met
-  if (sum(pave) < 200) break
-}
-return(pave)
-}
-  
-
-
-# f(n) = output
-Modelf <- function(n){
-  d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-  d$Pave.a <- Pavef(d$OCI.Model) # Decision to pave based on Pavef function
-  d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
-  d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-  d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
-  #   Now create the outputs
-  output <- sum(d$cost.a)
-  return(output)
-}
-
-# Now run the function X number of times
-# http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
-l <- alply(cbind(rep(100,100),rep(20,10)),1,Modelf)
-backlog <- data.frame(matrix(unlist(l), nrow=100, byrow=T))
-colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
-                       "average.annual.cost", "first.year")
-
-hist(backlog$benefit.to.cost)
-hist(backlog$average.annual.cost)
-hist(backlog$total.cost)
-hist(backlog$first.year) # The first year is always the highest cost
-
-
-
-
-
-
-
-
-
-
-###  Visualize ###
+# Visualize ####
 library(ggplot2)
 
 my.theme <- 
