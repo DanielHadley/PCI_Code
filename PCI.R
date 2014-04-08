@@ -56,29 +56,30 @@ Costf <- function(OCI, Functional, sq.yd){
 knapsack <- function(value, weight, limit){
   benefit.to.cost <- value / weight #Create ratio
   df = data.frame(value, weight, benefit.to.cost) # turn it into a DF
+  df$ID <- (1:nrow(df)) # add ID to resort later
   df <- df[with(df, order(-benefit.to.cost)), ] # Sort by benefit.to.cost
   rownames(df) <- NULL # Reset the row names for easier indexing
-  df$Weight <- ifelse(cumsum(df$weight) <= limit, cumsum(df$weight), 0) # Add first items that fit
+  df$total.weight <- ifelse(cumsum(df$weight) <= limit, cumsum(df$weight), 0) # Add first items that fit
   # I need to add a break here if nothing fits in the bag on the first pass
-  # Capital "W" Weight is the total weight of items, which must not exceed the limit
   for(i in 2:nrow(df)){ #Start in row 2 because some values have been added above
-    df$Weight[i] <- ifelse(df$weight[i] + df$Weight[i-1] <= limit, # If adding won't go over limit
-                           df$weight[i] + df$Weight[i-1], df$Weight[i-1]) # If it will, keep Weight the same
+    df$total.weight[i] <- ifelse(df$weight[i] + df$total.weight[i-1] <= limit, # If adding won't go over limit
+                                 df$weight[i] + df$total.weight[i-1], df$total.weight[i-1]) # If it will, keep Weight the same
   }
   df$add <- 0
-  df$add[1] <- ifelse(df$weight[1] > 0, 1, 0)
+  df$add[1] <- ifelse(df$total.weight[1] > 0, 1, 0)
   for(i in 2:nrow(df)){ #Start in row 2 
-    df$add[i] <- ifelse(df$weight[i] > df$Weight[i-1], 1, 0) # 1 if it has been added
+    df$add[i] <- ifelse(df$total.weight[i] > df$total.weight[i-1], 1, 0) # 1 if it has been added
   }
-  df$add[2] <- ifelse(cumsum(df$Weight[2]) > df$weight[1], 1,0) # Fix [2]: 2:nrow from previous 
-  return(df)
+  df <- df[with(df, order(ID)), ] # Resort by ID
+  rownames(df) <- NULL # Reset the row names for easier indexing
+  return(df$add)
 }
 
 
 # Here is where I attempt to create a model that includes the Knapsack algo
 d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
 d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-Pave.a <- knapsack(d$backlog, d$delta.pci, 400000) # Decision to pave based on Pavef function
+d$Pave.a <- knapsack(d$delta.pci, d$backlog, 2000000) # Decision to pave based on Pavef function
 d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
 d$OCI.a <- PCIf(d$Age.a) # OCI year n  
 d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
@@ -169,4 +170,10 @@ hist(backlog$first.year) # The first year is always the highest cost
 
                             
                                    
+
+
+
+
+
+
 
