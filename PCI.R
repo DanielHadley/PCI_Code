@@ -76,70 +76,43 @@ knapsack <- function(value, weight, limit){
 }
 
 
-# Here is where I attempt to create a model that includes the Knapsack algo
-d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-d$Pave.a <- knapsack(d$delta.pci, d$backlog, 2000000) # Decision to pave based on Pavef function
-d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
-d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
-
 
 # Here is where I attempt to create a stochastic model ####
-# The problem is that it's difficult to set the limit on spending, particularly in years  1 & 
+# The problem WAS that it's difficult to set the limit on spending, particularly in years  1 &
+# So I included a greedy knapsack algo in the model 
 # f(PCI) = Whether or Not to Pave
 # Here is where we set the rules and try different scenarios
-# This scenario is random with no bottom tiers
-Pavef <- function(OCI){
-  pave <- (ifelse((OCI >= 68) & (OCI < 88), 1,
-                  ifelse((OCI >= 47) & (OCI < 68), 1,
-                         ifelse(OCI == 47, 1, 0)))) # Top tiers
-  return(pave)
-}
-
-# This scenario is totally random
-Pavef <- function(OCI){
-  pave <-  sample(c(0,1), 573, replace = TRUE) #random
-  return(pave)
-}
-
-# Best - first. The problem is that you cannot control for the large 1st year cost
-Pavef <- function(OCI){
-  pave <- (ifelse((OCI >= 50),(sample(c(0,1), 573, replace = TRUE)),0))
-  return(pave)
-}
-
 
 
 # f(n) = output
 Modelf <- function(n){
-    d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-    d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-    d$Pave.a <- Pavef(d$OCI.Model) # Decision to pave based on Pavef function
-    d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
-    d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-    d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+      d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
+      d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
+      d$Pave.a <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.Model),d$backlog, 3000000) # Decision to pave
+      # Decision here is made by running a knapsack algo on the value = delta in PCI
+      d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
+      d$OCI.a <- PCIf(d$Age.a) # OCI year n  
+      d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
-    d$Pave.b <- Pavef(d$OCI.a) # Decision to pave based on Pavef function
-    d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
-    d$OCI.b <- PCIf(d$Age.b) # OCI year n  
-    d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+      d$Pave.b <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.a),d$backlog.a, 3000000) # Decision to pave
+      d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
+      d$OCI.b <- PCIf(d$Age.b) # OCI year n  
+      d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
-    d$Pave.c <- Pavef(d$OCI.b) # Decision to pave based on Pavef function
-    d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
-    d$OCI.c <- PCIf(d$Age.c) # OCI year n  
-    d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+      d$Pave.c <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.b),d$backlog.b, 3000000) # Decision to pave
+      d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
+      d$OCI.c <- PCIf(d$Age.c) # OCI year n  
+      d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #Backlog after year n
-    d$Pave.d <- Pavef(d$OCI.c) # Decision to pave based on Pavef function
-    d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
-    d$OCI.d <- PCIf(d$Age.d) # OCI year n  
-    d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+      d$Pave.d <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.c),d$backlog.c, 3000000) # Decision to pave
+      d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
+      d$OCI.d <- PCIf(d$Age.d) # OCI year n  
+      d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
-    d$Pave.e <- Pavef(d$OCI.d) # Decision to pave based on Pavef function
-    d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
-    d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-    d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+      d$Pave.e <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.d),d$backlog.d, 3000000) # Decision to pave
+      d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
+      d$OCI.e <- PCIf(d$Age.e) # OCI year n  
+      d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n    
 #   Now create the outputs
   backlog <- sum(d$backlog.e)
@@ -165,7 +138,6 @@ hist(backlog$benefit.to.cost)
 hist(backlog$average.annual.cost)
 hist(backlog$total.cost)
 hist(backlog$first.year) # The first year is always the highest cost
-
 
 
                             
