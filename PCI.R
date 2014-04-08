@@ -28,6 +28,7 @@ d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 
 ###  Model the Pavement decisions over 20 years 
 
+
 # First I create functions that describe the relationships analyzed previously ####
 # f(Age) = PCI 
 PCIf <- function(AGE){ 
@@ -167,7 +168,6 @@ knapsack <- function(value, weight, limit){
   rownames(df) <- NULL # Reset the row names for easier indexing
   return(df$add)
 }
-
 
 
 # Here is where I attempt to create a stochastic model 
