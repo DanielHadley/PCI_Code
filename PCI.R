@@ -77,53 +77,6 @@ knapsack <- function(value, weight, limit){
 }
 
 
-# Basic model: change in PCI as the "value"; cost = "weight", cap = $3 ####
-
-
-# f(n) = output
-# I think I should turn each year into a function, e.g., f(year, value, weight)
-Modelf <- function(n){
-      d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-      d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-      d$Pave.a <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.Model),d$backlog, 3000000) # Decision to pave
-      # Decision here is made by running a knapsack algo on the value = delta in PCI
-      d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
-      d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-      d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-    d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
-      d$Pave.b <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.a),d$backlog.a, 3000000) # Decision to pave
-      d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
-      d$OCI.b <- PCIf(d$Age.b) # OCI year n  
-      d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-    d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
-      d$Pave.c <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.b),d$backlog.b, 3000000) # Decision to pave
-      d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
-      d$OCI.c <- PCIf(d$Age.c) # OCI year n  
-      d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-    d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #Backlog after year n
-      d$Pave.d <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.c),d$backlog.c, 3000000) # Decision to pave
-      d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
-      d$OCI.d <- PCIf(d$Age.d) # OCI year n  
-      d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-    d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
-      d$Pave.e <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.d),d$backlog.d, 3000000) # Decision to pave
-      d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
-      d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-      d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-    d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n     
-#   Now create the outputs
-  backlog <- sum(d$backlog.e)
-  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
-  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
-  benefit.to.cost <- backlog.reduction / total.cost
-  average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
-                            (sum(d$cost.d)) + (sum(d$cost.e))) / 5
-  first.year <- sum(d$cost.a)
-output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, average.annual.cost, first.year)
-return(output)
-}
-
-
 # Now run the function X number of times ####
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
 library("plyr")
@@ -175,36 +128,34 @@ knapsack <- function(value, weight, limit){
 # Here is where we set the rules and try different scenarios
 
 
-# f(n) = output
 Modelf <- function(n){
   d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
   d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-  d$Pave.a <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.Model),d$backlog, 3000000) # Decision to pave
-  # Decision here is made by running a knapsack algo on the value = delta in PCI
+  d$Pave.a <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.Model), d$backlog, 3000000) # Decision to pave
+  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
   d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-  d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.b <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.a),d$backlog.a, 3000000) # Decision to pave
+  d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.b <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.a), d$backlog.a, 3000000) # Decision to pave
+  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
   d$OCI.b <- PCIf(d$Age.b) # OCI year n  
-  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
   d$Pave.c <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.b),d$backlog.b, 3000000) # Decision to pave
+  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
   d$OCI.c <- PCIf(d$Age.c) # OCI year n  
-  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-  d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.d <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.c),d$backlog.c, 3000000) # Decision to pave
+  d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.d <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.c)), d$backlog.c, 3000000) # Decision to pave
+  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
   d$OCI.d <- PCIf(d$Age.d) # OCI year n  
-  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-  d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
-  d$Pave.e <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.d),d$backlog.d, 3000000) # Decision to pave
-  d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
+  d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.e <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.d)), d$backlog.d, 3000000) # Decision to pave
+  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.c) #Age in year n
   d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n    
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
   #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
@@ -220,7 +171,7 @@ Modelf <- function(n){
 # Now run the function X number of times
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
 library("plyr")
-l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
+l <- alply(cbind(rep(100,100),rep(20,10)),1,Modelf)
 backlog <- data.frame(matrix(unlist(l), nrow=100, byrow=T))
 colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
                        "average.annual.cost", "first.year")
@@ -241,6 +192,46 @@ for (i in 1:10){
 }
 
 
+# Final model: change in PCI as the "value"; cost = "weight", cap = $3m ####
 
 
-
+# f(n) = output
+Modelf <- function(n){
+  d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
+  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
+  d$Pave.a <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.Model), d$backlog, 3000000) # Decision to pave
+  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
+  d$OCI.a <- PCIf(d$Age.a) # OCI year n  
+  d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.b <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.a), d$backlog.a, 3000000) # Decision to pave
+  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
+  d$OCI.b <- PCIf(d$Age.b) # OCI year n  
+  d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.c <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.b),d$backlog.b, 3000000) # Decision to pave
+  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
+  d$OCI.c <- PCIf(d$Age.c) # OCI year n  
+  d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.d <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.c)), d$backlog.c, 3000000) # Decision to pave
+  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
+  d$OCI.d <- PCIf(d$Age.d) # OCI year n  
+  d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.e <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.d)), d$backlog.d, 3000000) # Decision to pave
+  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.c) #Age in year n
+  d$OCI.e <- PCIf(d$Age.e) # OCI year n  
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  #   Now create the outputs
+  backlog <- sum(d$backlog.e)
+  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
+  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
+  benefit.to.cost <- backlog.reduction / total.cost
+  average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
+                            (sum(d$cost.d)) + (sum(d$cost.e))) / 5
+  first.year <- sum(d$cost.a)
+  output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, average.annual.cost, first.year)
+  return(output)
+}
