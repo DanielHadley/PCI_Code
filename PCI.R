@@ -29,7 +29,7 @@ d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 ###  Model the Pavement decisions over 20 years 
 
 
-# First I create functions that describe the relationships analyzed previously ####
+# Functions needed for the model: f(Age) = PCI, f(PCI) = Cost & knapsack = pave ####
 # f(Age) = PCI 
 PCIf <- function(AGE){ 
   PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
@@ -52,7 +52,7 @@ Costf <- function(OCI, Functional, sq.yd){
   return(Cost*sq.yd)
 }
 
-# f(value, weight, limit ) = pave. 
+# f(value, weight, limit ) = pave. This is the basic Pave function
 # This is a greedy approximation to the Knapsack algorithm
 knapsack <- function(value, weight, limit){
   benefit.to.cost <- value / weight #Create ratio
@@ -77,14 +77,11 @@ knapsack <- function(value, weight, limit){
 }
 
 
-# Here is where I attempt to create a stochastic model ####
-# The problem WAS that it's difficult to set the limit on spending, particularly in years  1 &
-# So I included a greedy knapsack algo in the model 
-# f(PCI) = Whether or Not to Pave
-# Here is where we set the rules and try different scenarios
+# Basic model: change in PCI as the "value"; cost = "weight", cap = $3 ####
 
 
 # f(n) = output
+# I think I should turn each year into a function, e.g., f(year, value, weight)
 Modelf <- function(n){
       d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
       d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
@@ -107,13 +104,13 @@ Modelf <- function(n){
       d$Pave.d <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.c),d$backlog.c, 3000000) # Decision to pave
       d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
       d$OCI.d <- PCIf(d$Age.d) # OCI year n  
-      d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+      d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.b,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
     d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
       d$Pave.e <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.d),d$backlog.d, 3000000) # Decision to pave
       d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
       d$OCI.e <- PCIf(d$Age.e) # OCI year n  
       d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-    d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n    
+    d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n     
 #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
@@ -126,7 +123,8 @@ output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, average.
 return(output)
 }
 
-# Now run the function X number of times
+
+# Now run the function X number of times ####
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
 library("plyr")
 l <- alply(cbind(rep(100,100),rep(20,10)),1,Modelf)
@@ -241,6 +239,7 @@ for (i in 1:10){
   d$cost.[i] <- ifelse(d$Pave.[i] == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$backlog.[i] <- ifelse(d$Pave.[i] == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
 }
+
 
 
 
