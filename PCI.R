@@ -30,7 +30,9 @@ d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 
 
 # Functions needed for the model: f(Age) = PCI, f(PCI) = AGE, f(PCI) = Cost & fknapsack = pave ####
-# f(Age) = PCI 
+# f(Age) = PCI
+# I can differentiate between residetnial and collector, but the difference is small
+# See AnalyzePCI.R
 PCIf <- function(AGE){ 
   PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
   return(PCI)
@@ -291,5 +293,6 @@ Modelf <- function(n){
 
 Modelf(1)
 
+difference <- 73103186 - 37577635
 
 
