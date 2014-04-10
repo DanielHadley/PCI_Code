@@ -29,7 +29,7 @@ d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 ###  Model the Pavement decisions over 20 years 
 
 
-# Functions needed for the model: f(Age) = PCI, f(PCI) = Cost & knapsack = pave ####
+# Functions needed for the model: f(Age) = PCI, f(PCI) = Cost & fknapsack = pave ####
 # f(Age) = PCI 
 PCIf <- function(AGE){ 
   PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
