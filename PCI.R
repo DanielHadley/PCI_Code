@@ -310,3 +310,58 @@ Modelf(1)
 difference <- 73103186 - 37577635
 
 
+# Final model to compare against the consultant: cap = $1.5 + some of the worst streets ####
+# Backlog after 5 years for consultant spending $4.5 m is $81,115,018 m.
+
+# f(n) = output
+Modelf <- function(n){
+  d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
+  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
+  d$Pave.a <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.Model), d$backlog, 1500000) # Decision to pave
+  d$Pave.a <- ifelse(d$OCI.Model < 7, 1, d$Pave.a) # Pave the worst street
+  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
+  d$OCI.a <- PCIf(d$Age.a) # OCI year n  
+  d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.b <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.a), d$backlog.a, 1500000) # Decision to pave
+  d$Pave.b <- ifelse(d$OCI.a < 7, 1, d$Pave.b) # Pave the worst street
+  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.b <- ifelse(d$Pave.b == 1, 1, 1 + d$Age.a) #Age in year n
+  d$OCI.b <- PCIf(d$Age.b) # OCI year n  
+  d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.c <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.b),d$backlog.b, 1500000) # Decision to pave
+  d$Pave.c <- ifelse(d$OCI.b < 7, 1, d$Pave.c) # Pave the worst street
+  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.c <- ifelse(d$Pave.c == 1, 1, 1 + d$Age.b) #Age in year n
+  d$OCI.c <- PCIf(d$Age.c) # OCI year n  
+  d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.d <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.c)), d$backlog.c, 1500000) # Decision to pave
+  d$Pave.d <- ifelse(d$OCI.c < 7, 1, d$Pave.d) # Pave the worst street
+  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.d <- ifelse(d$Pave.d == 1, 1, 1 + d$Age.c) #Age in year n
+  d$OCI.d <- PCIf(d$Age.d) # OCI year n  
+  d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #Backlog after year n
+  d$Pave.e <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.d)), d$backlog.d, 1500000) # Decision to pave
+  d$Pave.e <- ifelse(d$OCI.d < 7, 1, d$Pave.e) # Pave the worst street
+  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.c) #Age in year n
+  d$OCI.e <- PCIf(d$Age.e) # OCI year n  
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  #   Now create the outputs
+  backlog <- sum(d$backlog.e)
+  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
+  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
+  benefit.to.cost <- backlog.reduction / total.cost
+  average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
+                            (sum(d$cost.d)) + (sum(d$cost.e))) / 5
+  first.year <- sum(d$cost.a)
+  output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, average.annual.cost, first.year)
+  return(output)
+}
+
+Modelf(1)
+
+difference <- 45314093 - 81115000
+
+
+
