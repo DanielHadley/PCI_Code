@@ -1,11 +1,25 @@
-# This code cleans and analyzes data from FST, the pavement consultant
-# OCI value = PCI.  Note these scores are from November 2012.
+# Read Me ####
+# This code analyzes data from FST, the City's pavement consultant
 # It models the cost and PCI degredation in order to optimize pavement decisions
+# OCI value = PCI.  Note these scores are from November 2012.
 # Created By Daniel Hadley
 
+# Considerations: 
+# 1. The knapsack approximates an optimal outcome, but needs to be inspected in cases where the 
+# limit is low,E.g., http://oucsace.cs.ohiou.edu/~razvan/courses/cs4040/lecture16.pdf
+# 2. The model glosses over differences in the deterioration of arterial vs residential for now
+# These differences seemed small enough to gloss over for the sake of comparison
+# 3. The model also glosses over differences in PCI reset of various treatment types.
+# A full repavement would generally reset to PCI = 100, whereas this model by default resets 
+# everthing to 95. Details: http://www.mylongview.com/modules/showdocument.aspx?documentid=631
+# These differences also seemed trivial when comparing strategies
+
+
+# Import data ####
 setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
 # setwd ("~/Documents/Git/PCI_Code") #at home
 d <- read.csv("PCI.csv")
+
 
 # Create new variables #### 
 d$sq.ft <- d$PavementWi * d$Length # Sq. Feet
