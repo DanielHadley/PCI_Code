@@ -26,7 +26,9 @@ d$cost.per.sq.yd <- d$ExtendedCo / d$sq.yd # Cost per sq yard
 # http://onlinepubs.trb.org/onlinepubs/conferences/2012/assetmgmt/presentations/Data-A-Ramirez-Flores-Chang-Albitres.pdf
 # https://repository.tamu.edu/bitstream/handle/1969.1/ETD-TAMU-2009-05-317/DESHMUKH-THESIS.pdf?sequence=2
 # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
-# PCI = 100 - (106/((ln(79/AGE))^(1/.48)))
+# PCI = 100 - (106/((ln(79/AGE))^(1/.48))) # collector
+# PCI = 100 - (109/((ln(88/AGE))^(1/.58))) # arterial
+# PCI = 100 - (110/((ln(97/AGE))^(1/.61))) # residential
 
 d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 plot(d$est.years, d$OCI)
@@ -34,6 +36,9 @@ plot(d$est.years, d$OCI)
 d$last.paved <- 2012 - d$est.years
 hist(d$last.paved) # I'm skeptical there are streets we have not paved since the 80s
 
+d$PCI2 = 100 - (110/((log(97/d$est.years))^(1/.61)))
+d$PCI3 = 100 - (109/((log(88/d$est.years))^(1/.58)))
+plot(d$est.years, d$PCI3)
 
 # test
 plot(log(d$ExtendedCo), d$OCI)
