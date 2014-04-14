@@ -14,6 +14,8 @@
 # everthing to 95. Details: http://www.mylongview.com/modules/showdocument.aspx?documentid=631
 # These differences also seemed trivial when comparing strategies
 
+library("plyr")
+
 
 # Import data ####
 setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
@@ -97,8 +99,8 @@ knapsack <- function(value, weight, limit){
 # Now run the function X number of times ####
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
 library("plyr")
-l <- alply(cbind(rep(100,100),rep(20,10)),1,Modelf)
-backlog <- data.frame(matrix(unlist(l), nrow=100, byrow=T))
+l <- alply(cbind(rep(1,1),rep(20,10)),1,Modelf)
+backlog <- data.frame(matrix(unlist(l), nrow=1, byrow=T))
 colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
                        "average.annual.cost", "first.year")
 
@@ -417,11 +419,13 @@ Modelf <- function(n){
 
 Modelf(1)
 
-difference <- 46069393 - 81115000
+difference <- 81115000 -46069393 
 
 
-# Conservative model to compare against the consultant: cap = $.5 + some of the worst streets ####
-# Backlog after 5 years for consultant spending $4.5 m is $81,115,018 m.
+# Conservative model to compare against the consultant: cap = $.2 + some of the very worst streets ####
+# Backlog after 5 years for consultant spending $1.1 m is $114,530,924
+# But it's strange because they seem to suggest that they will not pave the worst roads
+# This is a difficult comparison
 # Age = age + 3 years because most treatments do not reset the PCI to 100 (or even 95)
 # It's a much more conservative approach 
 
@@ -475,5 +479,5 @@ Modelf <- function(n){
 
 Modelf(1)
 
-difference <- 46069393 - 60131483
+
 
