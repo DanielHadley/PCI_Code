@@ -47,7 +47,10 @@ d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 ###  Model the Pavement decisions over 20 years 
 
 
-# Functions needed for the model: f(Age) = PCI, f(PCI) = AGE, f(PCI) = Cost & fknapsack = pave ####
+# Functions needed for the model: ####
+# f(Age) = PCI, f(PCI) = AGE, f(Age, Pave, Old PCI) = New PCI 
+# f(PCI) = AGE, f(PCI) = Cost, f(knapsack) = pave 
+
 # f(Age) = PCI
 # I can differentiate between residetnial and collector, but the difference is small
 # See AnalyzePCI.R
@@ -77,13 +80,15 @@ Costf <- function(OCI, Functional, sq.yd){
 # f(PCI) = delta
 # This takes the current PCI and calculates the difference between that and the PCI post treatment
 # This is essentially the "value" in the knapsack algo
-#  Deltaf <- function(OCI, Functional, sq.yd){ 
-#    Delta <- ifelse((OCI >= 68) & (OCI < 88), (93 * sq.yd)-(OCI * sq.yd),
-#                    (100 * sq.yd)-(OCI * sq.yd))
-#    return(Delta)
-#  }
+Deltaf <- function(OldOCI, sq.yd){ 
+   Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88), (OldOCI + 7) * sq.yd - (OldOCI * sq.yd),
+                   # why + 7: http//www.ci.san-ramon.ca.us/engr/pavement.html
+                   ifelse((OldOCI >= 25) & (OldOCI < 68) & (Pave == 1), (96 * sq.yd) - (OldOCI * sq.yd),
+                          (100 * sq.yd) - (OldOCI * sq.yd)
+                                 ))                      
+  return(Delta)
+}
 
-                        
 
 # f(value, weight, limit ) = pave. This is the basic Pave function
 # This is a greedy approximation to the Knapsack algorithm
@@ -107,6 +112,29 @@ knapsack <- function(value, weight, limit){
   df <- df[with(df, order(ID)), ] # Resort by ID
   rownames(df) <- NULL # Reset the row names for easier indexing
   return(df$add)
+}
+
+
+# f(Age, Pave, Old PCI) = New PCI
+# I can differentiate between residetnial and collector, but the difference is small
+# See AnalyzePCI.R
+NewPCIf <- function(AGE, Pave, OldOCI){
+  NewPCI <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Pave == 1), OldOCI + 7,
+                   # why + 7: http//www.ci.san-ramon.ca.us/engr/pavement.html
+                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Pave == 1), 96,
+                          ifelse((OldOCI >= 25) & (OldOCI < 47) & (Pave == 1), 96, 
+                                 # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
+                                 ifelse((OldOCI >= 0) & (OldOCI < 25) & (Pave == 1), 100,
+                                        100 - (106/((log(79/AGE))^(1/.48)))
+                                 ))))                      
+  return(NewPCI)
+}
+
+
+# f(NewPCI) = New Age
+Agef <- function(NewPCI){
+  NewAge <- <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
+  return(NewAge)
 }
 
 
