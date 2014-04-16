@@ -11,8 +11,10 @@
 # These differences seemed small enough to gloss over for the sake of comparison
 # 3. The model also glosses over differences in PCI reset of various treatment types.
 # A full repavement would generally reset to PCI = 100, whereas this model by default resets 
-# everthing to 95. Details: http://www.mylongview.com/modules/showdocument.aspx?documentid=631
+# everthing to 95 (f(age+1)=PCI). Details: http://www.mylongview.com/modules/showdocument.aspx?documentid=631
 # These differences also seemed trivial when comparing strategies
+# For number three, it would be easy to finish the function f(PCI) = delta
+# Then you would add a "Functional" argument to f(age) = PCI 
 
 library("plyr")
 
@@ -70,6 +72,18 @@ Costf <- function(OCI, Functional, sq.yd){
                                                                         ifelse(OCI >= 88, 0, 360)))))))))))
   return(Cost*sq.yd)
 }
+
+
+# f(PCI) = delta
+# This takes the current PCI and calculates the difference between that and the PCI post treatment
+# This is essentially the "value" in the knapsack algo
+#  Deltaf <- function(OCI, Functional, sq.yd){ 
+#    Delta <- ifelse((OCI >= 68) & (OCI < 88), (93 * sq.yd)-(OCI * sq.yd),
+#                    (100 * sq.yd)-(OCI * sq.yd))
+#    return(Delta)
+#  }
+
+                        
 
 # f(value, weight, limit ) = pave. This is the basic Pave function
 # This is a greedy approximation to the Knapsack algorithm
@@ -217,7 +231,7 @@ for (i in 1:10){
 # f(n) = output
 Modelf <- function(n){
   d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
+  d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog in Nov 2012
   d$Pave.a <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.Model), d$backlog, 4500000) # Decision to pave
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.a <- ifelse(d$Pave.a == 1, 1, 1 + d$est.years) #Age in year n
@@ -482,7 +496,6 @@ Modelf(1)
 
 # Here are the Streets that DPW did in 2013 ####
 Modelf <- function(n){
-
 d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
 d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
 ## The following list is missing the private ways and the part of Shore they did. Was it all Shore?
