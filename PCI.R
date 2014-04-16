@@ -110,24 +110,6 @@ knapsack <- function(value, weight, limit){
 }
 
 
-# Now run the function X number of times ####
-# http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
-library("plyr")
-l <- alply(cbind(rep(1,1),rep(20,10)),1,Modelf)
-backlog <- data.frame(matrix(unlist(l), nrow=1, byrow=T))
-colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
-                       "average.annual.cost", "first.year")
-
-hist(backlog$benefit.to.cost)
-hist(backlog$average.annual.cost)
-hist(backlog$total.cost)
-hist(backlog$first.year) # The first year is always the highest cost
-
-
-                            
-                                   
-
-
 # Stochastic attempt ####
 # f(value, weight, limit ) = pave. 
 # This is a greedy approximation to the Knapsack algorithm
