@@ -215,16 +215,6 @@ hist(backlog$total.cost)
 hist(backlog$first.year)
 
 
-# Attempt to put the model into a function that can be automated in a for loop ####
-for (i in 1:10){
-  d$Pave.[i] <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI),d$backlog, 3000000) # Decision to pave
-  d$Age.[i] <- ifelse(d$Pave.[i] == 1, 1, 1 + d$Age.a) #Age in year n
-  d$OCI.[i] <- PCIf(d$Age.[i]) # OCI year n  
-  d$cost.[i] <- ifelse(d$Pave.[i] == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-  d$backlog.[i] <- ifelse(d$Pave.[i] == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
-}
-
-
 # Final model: change in PCI as the "value"; cost = "weight", cap = $4.5m ####
 
 
@@ -256,7 +246,7 @@ Modelf <- function(n){
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.c) #Age in year n
   d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n
   #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
@@ -308,7 +298,7 @@ Modelf <- function(n){
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
   d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n
   #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
@@ -362,7 +352,7 @@ Modelf <- function(n){
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.e <- ifelse(d$Pave.e == 1, 1, 1 + d$Age.d) #Age in year n
   d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n
   #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
@@ -476,7 +466,7 @@ Modelf <- function(n){
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.e <- ifelse(d$Pave.e == 1, 3, 1 + d$Age.d) #Age in year n
   d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
+  d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.d,d$Functional, d$sq.yd),0) #Backlog after year n
   #   Now create the outputs
   backlog <- sum(d$backlog.e)
   backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
