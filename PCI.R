@@ -42,7 +42,10 @@ d$sq.yd <- d$sq.ft * 0.111111 # Sq. Yards
 # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
 # See AnalyzePCI.R
 PCIf <- function(AGE){ 
-  PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
+  PCI <- ifelse(d$Functional == "CO - Collector", 100 - (106/((log(79/AGE))^(1/.48))),
+                ifelse(d$Functional == "AR - Arterial", 100 - (109/((log(88/AGE))^(1/.58))),
+                       100 - (97/((log(110/AGE))^(1/.61)))
+                ))
   return(PCI)
 }
 
@@ -113,15 +116,21 @@ NewPCIf <- function(AGE, Pave, OldOCI){
                           ifelse((OldOCI >= 25) & (OldOCI < 47) & (Pave == 1), 96, 
                                  # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
                                  ifelse((OldOCI >= 0) & (OldOCI < 25) & (Pave == 1), 100,
-                                        100 - (106/((log(79/AGE))^(1/.48)))
-                                 ))))                      
+                                        ifelse((d$Functional == "CO - Collector") & (Pave == 0), 100 - (106/((log(79/AGE))^(1/.48))),
+                                               ifelse((d$Functional == "AR - Arterial") & (Pave == 0), 100 - (109/((log(88/AGE))^(1/.58))),
+                                                      100 - (97/((log(110/AGE))^(1/.61)))
+                                 ))))))                      
   return(NewPCI)
 }
 
 
 # f(NewPCI) = New Age
 Agef <- function(NewPCI){
-  NewAge <- 79*(2.71828^(-9.37879/(100-NewPCI)^0.48))
+  NewAge <- ifelse((d$Functional == "CO - Collector"), 79*(2.71828^(-9.37879/(100-NewPCI)^0.48)),
+                   ifelse((d$Functional == "AR - Arterial"), 88*(2.71828^(-15.1952/(100-NewPCI)^0.58)),
+                          110*(2.71828^(-16.2904/(100-NewPCI)^0.61))
+                   ))
+                   
   return(NewAge)
 }
 
@@ -498,4 +507,100 @@ hist(backlog$benefit.to.cost)
 hist(backlog$average.annual.cost)
 hist(backlog$total.cost)
 hist(backlog$first.year)
+
+
+# Tmp copy: Functions needed for the model: ####
+# f(Age) = PCI, f(PCI) = AGE, f(Age, Pave, Old PCI) = New PCI 
+# f(PCI) = AGE, f(PCI) = Cost, f(knapsack) = pave 
+
+# f(Age) = PCI
+# I can differentiate between residetnial and collector, but the difference is small
+# Referenes below
+# http://onlinepubs.trb.org/onlinepubs/conferences/2012/assetmgmt/presentations/Data-A-Ramirez-Flores-Chang-Albitres.pdf
+# https://repository.tamu.edu/bitstream/handle/1969.1/ETD-TAMU-2009-05-317/DESHMUKH-THESIS.pdf?sequence=2
+# http://www.mylongview.com/modules/showdocument.aspx?documentid=631
+# See AnalyzePCI.R
+PCIf <- function(AGE){ 
+  PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
+  return(PCI)
+}
+
+
+# f(PCI, Function, Sq.yd) = Cost 
+Costf <- function(OCI, Functional, sq.yd){ 
+  Cost <- ifelse((OCI >= 68) & (OCI < 88), 1.8,
+                 ifelse((OCI >= 47) & (OCI < 68), 18.50,
+                        ifelse((OCI >= 25) & (OCI < 47) & (Functional == "RT - Residential Local"), 76.80,
+                               ifelse((OCI >= 25) & (OCI < 47) & (Functional == "RE - Residential Dead End"), 76.80,
+                                      ifelse((OCI >= 25) & (OCI < 47) & (Functional == "CO - Collector" ), 91.10,
+                                             ifelse((OCI >= 25) & (OCI < 47) & (Functional == "AR - Arterial"), 91.10,
+                                                    ifelse((OCI >= 0) & (OCI < 25) & (Functional == "RT - Residential Local"), 139.80,
+                                                           ifelse((OCI >= 0) & (OCI < 25) & (Functional == "RE - Residential Dead End"), 139.80,
+                                                                  ifelse((OCI >= 0) & (OCI < 25) & (Functional == "CO - Collector"), 147.70,
+                                                                         ifelse((OCI >= 0) & (OCI < 25) & (Functional == "AR - Arterial"), 162.10,
+                                                                                ifelse(OCI >= 88, 0, 360)))))))))))
+  return(Cost*sq.yd)
+}
+
+
+# f(PCI) = delta
+# This takes the current PCI and calculates the difference between that and the PCI post treatment
+# This is essentially the "value" in the knapsack algo
+# It can be thought of as the backlog in PCI
+Deltaf <- function(OldOCI, sq.yd){ 
+  Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88), ((OldOCI + 7) * sq.yd) - (OldOCI * sq.yd),
+                  # why + 7: http//www.ci.san-ramon.ca.us/engr/pavement.html
+                  ifelse((OldOCI >= 25) & (OldOCI < 68), (96 * sq.yd) - (OldOCI * sq.yd),
+                         (100 * sq.yd) - (OldOCI * sq.yd)
+                  ))                      
+  return(Delta)
+}
+
+
+# f(value, weight, limit ) = pave. This is the basic Pave function
+# This is a greedy approximation to the Knapsack algorithm
+knapsack <- function(value, weight, limit){
+  benefit.to.cost <- value / weight #Create ratio
+  df = data.frame(value, weight, benefit.to.cost) # turn it into a DF
+  df$ID <- (1:nrow(df)) # add ID to resort later
+  df <- df[with(df, order(-benefit.to.cost)), ] # Sort by benefit.to.cost
+  rownames(df) <- NULL # Reset the row names for easier indexing
+  df$total.weight <- ifelse(cumsum(df$weight) <= limit, cumsum(df$weight), 0) # Add first items that fit
+  # I need to add a break here if nothing fits in the bag on the first pass
+  for(i in 2:nrow(df)){ #Start in row 2 because some values have been added above
+    df$total.weight[i] <- ifelse(df$weight[i] + df$total.weight[i-1] <= limit, # If adding won't go over limit
+                                 df$weight[i] + df$total.weight[i-1], df$total.weight[i-1]) # If it will, keep Weight the same
+  }
+  df$add <- 0
+  df$add[1] <- ifelse(df$total.weight[1] > 0, 1, 0)
+  for(i in 2:nrow(df)){ #Start in row 2 
+    df$add[i] <- ifelse(df$total.weight[i] > df$total.weight[i-1], 1, 0) # 1 if it has been added
+  }
+  df <- df[with(df, order(ID)), ] # Resort by ID
+  rownames(df) <- NULL # Reset the row names for easier indexing
+  return(df$add)
+}
+
+
+# f(Age, Pave, Old PCI) = New PCI
+# I can differentiate between residetnial and collector, but the difference is small
+# See AnalyzePCI.R
+NewPCIf <- function(AGE, Pave, OldOCI){
+  NewPCI <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Pave == 1), OldOCI + 7,
+                   # why + 7: http//www.ci.san-ramon.ca.us/engr/pavement.html
+                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Pave == 1), 96,
+                          ifelse((OldOCI >= 25) & (OldOCI < 47) & (Pave == 1), 96, 
+                                 # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
+                                 ifelse((OldOCI >= 0) & (OldOCI < 25) & (Pave == 1), 100,
+                                        100 - (106/((log(79/AGE))^(1/.48)))
+                                 ))))                      
+  return(NewPCI)
+}
+
+
+# f(NewPCI) = New Age
+Agef <- function(NewPCI){
+  NewAge <- 79*(2.71828^(-9.37879/(100-NewPCI)^0.48))
+  return(NewAge)
+}
 
