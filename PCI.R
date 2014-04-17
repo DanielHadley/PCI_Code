@@ -28,23 +28,6 @@ d <- read.csv("PCI.csv")
 # Create new variables #### 
 d$sq.ft <- d$PavementWi * d$Length # Sq. Feet
 d$sq.yd <- d$sq.ft * 0.111111 # Sq. Yards
-d$total.pci <- d$sq.yd * d$OCI # Sum PCI
-d$ideal.pci <- d$sq.yd * 100 # Ideal sum PCI
-d$delta.pci <- d$ideal.pci - d$total.pci #Difference
-d$cost.per.sq.yd <- d$ExtendedCo / d$sq.yd # Cost per sq yard
-
-
-# Here I model the age as a function of PCI based on the references below:
-# It is an average of residential and arterial, but we can divide those later
-# http://onlinepubs.trb.org/onlinepubs/conferences/2012/assetmgmt/presentations/Data-A-Ramirez-Flores-Chang-Albitres.pdf
-# https://repository.tamu.edu/bitstream/handle/1969.1/ETD-TAMU-2009-05-317/DESHMUKH-THESIS.pdf?sequence=2
-# http://www.mylongview.com/modules/showdocument.aspx?documentid=631
-# PCI = 100 - (106/((ln(79/AGE))^(1/.48)))
-
-d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
-
-
-###  Model the Pavement decisions over 20 years 
 
 
 # Functions needed for the model: ####
@@ -53,6 +36,10 @@ d$est.years <- 79*(2.71828^(-9.37879/(100-d$OCI)^0.48))
 
 # f(Age) = PCI
 # I can differentiate between residetnial and collector, but the difference is small
+# Referenes below
+# http://onlinepubs.trb.org/onlinepubs/conferences/2012/assetmgmt/presentations/Data-A-Ramirez-Flores-Chang-Albitres.pdf
+# https://repository.tamu.edu/bitstream/handle/1969.1/ETD-TAMU-2009-05-317/DESHMUKH-THESIS.pdf?sequence=2
+# http://www.mylongview.com/modules/showdocument.aspx?documentid=631
 # See AnalyzePCI.R
 PCIf <- function(AGE){ 
   PCI <- 100 - (106/((log(79/AGE))^(1/.48)))
@@ -60,7 +47,7 @@ PCIf <- function(AGE){
 }
 
 
-# f(PCI) = Cost 
+# f(PCI, Function, Sq.yd) = Cost 
 Costf <- function(OCI, Functional, sq.yd){ 
   Cost <- ifelse((OCI >= 68) & (OCI < 88), 1.8,
          ifelse((OCI >= 47) & (OCI < 68), 18.50,
@@ -441,4 +428,74 @@ return(output)
 
 Modelf(1)
 
+
+# Stochastic Model (random spending number) to see return on investment ####
+
+Modelf <- function(n){
+  random <- runif(1, min=10000, max=3000000)
+  d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
+  d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
+  d$Delta.a <- Deltaf(d$OCI, d$sq.yd) # Difference between old OCI and potential OCI
+  d$Pave.a <- knapsack(d$Delta.a, d$backlog, random) # Pave or not in spring 2013
+  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
+  d$PCI.a <-  NewPCIf(d$Age.Tmp, d$Pave.a, d$OCI)
+  d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
+  d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
+  d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd)
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, random)
+  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
+  d$Age.Tmp <- (1 + d$Age.a) 
+  d$PCI.b <-  NewPCIf(d$Age.Tmp, d$Pave.b, d$PCI.a)
+  d$Age.b <- Agef(d$PCI.b)
+  d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
+  d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, random)
+  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
+  d$Age.Tmp <- (1 + d$Age.b) 
+  d$PCI.c <-  NewPCIf(d$Age.Tmp, d$Pave.c, d$PCI.b)
+  d$Age.c <- Agef(d$PCI.c)
+  d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
+  d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, random)
+  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
+  d$Age.Tmp <- (1 + d$Age.c) 
+  d$PCI.d <-  NewPCIf(d$Age.Tmp, d$Pave.d, d$PCI.c)
+  d$Age.d <- Agef(d$PCI.d)
+  d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
+  d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, random)
+  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
+  d$Age.Tmp <- (1 + d$Age.d) 
+  d$PCI.e <-  NewPCIf(d$Age.Tmp, d$Pave.e, d$PCI.d)
+  d$Age.e <- Agef(d$PCI.e)
+  d$backlog.e <- Costf(d$PCI.e, d$Functional, d$sq.yd)
+  #   Now create the outputs
+  random <- random
+  backlog <- sum(d$backlog.e)
+  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
+  total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
+  benefit.to.cost <- backlog.reduction / total.cost
+  average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
+                            (sum(d$cost.d)) + (sum(d$cost.e))) / 5
+  first.year <- sum(d$cost.a)
+  output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, 
+                 average.annual.cost, first.year, random)
+  return(output)
+}
+
+Modelf(1)
+
+# Now run the function X number of times
+# http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
+library("plyr")
+l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
+backlog <- data.frame(matrix(unlist(l), nrow=1000, byrow=T))
+colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
+                       "average.annual.cost", "first.year", "PMSpending")
+
+hist(backlog$benefit.to.cost)
+hist(backlog$average.annual.cost)
+hist(backlog$total.cost)
+hist(backlog$first.year)
 
