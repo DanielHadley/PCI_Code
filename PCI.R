@@ -66,11 +66,11 @@ Costf <- function(OCI, Functional, sq.yd){
 # It can be thought of as the backlog in PCI
 Deltaf <- function(OldOCI, sq.yd){ 
    Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88), ((OldOCI + 8) * sq.yd) - (OldOCI * sq.yd),
-                   ifelse((OldOCI >= 47) & (OldOCI < 68), ((OldOCI + 6) * sq.yd) - (OldOCI * sq.yd),
+                   ifelse((OldOCI >= 47) & (OldOCI < 68), ((OldOCI + 7) * sq.yd) - (OldOCI * sq.yd),
                    # why + 8 and +9: http//www.ci.san-ramon.ca.us/engr/pavement.html
                    ifelse((OldOCI >= 25) & (OldOCI < 47), (96 * sq.yd) - (OldOCI * sq.yd),
                           (100 * sq.yd) - (OldOCI * sq.yd)
-                                 ))                      
+                                 )))                      
   return(Delta)
 }
 
@@ -318,7 +318,7 @@ hist(backlog$total.cost)
 hist(backlog$first.year)
 
 
-# Final model for comparison to consultant: cap = $1.5m + worst streets ####
+# Final model for comparison to consultant: cap = $2m + worst streets ####
 # Backlog after 5 years for consultant spending $4.5 m is $81,115,018 m.
 
 # f(n) = output
@@ -326,7 +326,7 @@ Modelf <- function(n){
   d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Delta.a <- Deltaf(d$OCI, d$sq.yd) # Difference between old OCI and potential OCI
-  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 1500000) # Pave or not in spring 2013
+  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 2000000) # Pave or not in spring 2013
   d$Pave.a <- ifelse(d$OCI < 10, 1, d$Pave.a) # Pave the worst streets
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
@@ -334,7 +334,7 @@ Modelf <- function(n){
   d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
   d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
   d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd)
-  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1500000)
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 2000000)
   d$Pave.b <- ifelse(d$PCI.a < 10, 1, d$Pave.b) 
   d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
   d$Age.Tmp <- (1 + d$Age.a) 
@@ -342,7 +342,7 @@ Modelf <- function(n){
   d$Age.b <- Agef(d$PCI.b)
   d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
   d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd)
-  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1500000)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 2000000)
   d$Pave.c <- ifelse(d$PCI.b < 10, 1, d$Pave.c)
   d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
   d$Age.Tmp <- (1 + d$Age.b) 
@@ -350,7 +350,7 @@ Modelf <- function(n){
   d$Age.c <- Agef(d$PCI.c)
   d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
   d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd)
-  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1500000)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 2000000)
   d$Pave.d <- ifelse(d$PCI.c < 10, 1, d$Pave.d)
   d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
   d$Age.Tmp <- (1 + d$Age.c) 
@@ -358,7 +358,7 @@ Modelf <- function(n){
   d$Age.d <- Agef(d$PCI.d)
   d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
   d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd)
-  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1500000)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 2000000)
   d$Pave.e <- ifelse(d$PCI.d < 10, 1, d$Pave.e)
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
   d$Age.Tmp <- (1 + d$Age.d) 
@@ -382,54 +382,18 @@ Modelf(1)
 
 # Here are the Streets that DPW did in 2013 ####
 Modelf <- function(n){
-d$OCI.Model <- PCIf(d$est.years) # Use the model instead of the empirical OCI
-d$backlog <- Costf(d$OCI.Model, d$Functional, d$sq.yd) # when summed, this gives you your backlog
-## The following list is missing the private ways and the part of Shore they did. Was it all Shore?
-d$Pave.a <- ifelse(d$STREETNAME %in% c('ALBION ST' , 'ALBION TERR', 'BELMONT SQ', 'HAMMOND ST',
-                                       'MORGAN ST', 'WHEELER ST', 'WYATT ST', 'YORKTOWN ST'), 1, 0)
-d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$Age.a <- ifelse(d$Pave.a == 1, 3, 1 + d$est.years) #Age in year n
-d$OCI.a <- PCIf(d$Age.a) # OCI year n  
-d$backlog.a <- ifelse(d$Pave.a == 0, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #Backlog after year n
-d$Pave.b <- knapsack((d$sq.yd * 100 - d$sq.yd * d$OCI.a), d$backlog.a, 250000) # Decision to pave
-d$Pave.b <- ifelse(d$OCI.a < 4, 1, d$Pave.b) # Pave the worst street
-d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$OCI.Model, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$Age.b <- ifelse(d$Pave.b == 1, 3, 1 + d$Age.a) #Age in year n
-d$OCI.b <- PCIf(d$Age.b) # OCI year n  
-d$backlog.b <- ifelse(d$Pave.b == 0, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #Backlog after year n
-d$Pave.c <- knapsack((d$sq.yd*100 - d$sq.yd*d$OCI.b),d$backlog.b, 250000) # Decision to pave
-d$Pave.c <- ifelse(d$OCI.b < 3, 1, d$Pave.c) # Pave the worst street
-d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$OCI.a,d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$Age.c <- ifelse(d$Pave.c == 1, 3, 1 + d$Age.b) #Age in year n
-d$OCI.c <- PCIf(d$Age.c) # OCI year n  
-d$backlog.c <- ifelse(d$Pave.c == 0, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #Backlog after year n
-d$Pave.d <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.c)), d$backlog.c, 250000) # Decision to pave
-d$Pave.d <- ifelse(d$OCI.c < 2, 1, d$Pave.d) # Pave the worst street
-d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$OCI.b, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$Age.d <- ifelse(d$Pave.d == 1, 3, 1 + d$Age.c) #Age in year n
-d$OCI.d <- PCIf(d$Age.d) # OCI year n  
-d$backlog.d <- ifelse(d$Pave.d == 0, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #Backlog after year n
-d$Pave.e <- knapsack(((d$sq.yd * 100) - (d$sq.yd * d$OCI.d)), d$backlog.d, 250000) # Decision to pave
-d$Pave.e <- ifelse(d$OCI.d < 1, 1, d$Pave.e) # Pave the worst street
-d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$OCI.c, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
-d$Age.e <- ifelse(d$Pave.e == 1, 3, 1 + d$Age.d) #Age in year n
-d$OCI.e <- PCIf(d$Age.e) # OCI year n  
-d$backlog.e <- ifelse(d$Pave.e == 0, Costf(d$OCI.c,d$Functional, d$sq.yd),0) #Backlog after year n
-#   Now create the outputs
-backlog <- sum(d$backlog.e)
-backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
-total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
-benefit.to.cost <- backlog.reduction / total.cost
-average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
-                          (sum(d$cost.d)) + (sum(d$cost.e))) / 5
-first.year <- sum(d$cost.a)
-averagePCI <- mean(d$OCI.e)
-output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, average.annual.cost, 
-               first.year, averagePCI)
-return(output)
+  d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
+  d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
+  ## The following list is missing the private ways and the part of Shore they did. Was it all Shore?
+  d$Pave.a <- ifelse(d$STREETNAME %in% c('ALBION ST' , 'ALBION TERR', 'BELMONT SQ', 'HAMMOND ST',
+                                         'MORGAN ST', 'WHEELER ST', 'WYATT ST', 'YORKTOWN ST'), 1, 0)
+  d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
+  d$PCI.a <-  NewPCIf(d$Age.Tmp, d$Pave.a, d$OCI)
+  d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
+  d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
+return(sum(d$backlog))
 }
-
-Modelf(1)
 
 
 # Stochastic Model (random spending number) to see return on investment ####
