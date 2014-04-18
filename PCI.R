@@ -87,7 +87,7 @@ Deltaf <- function(OldOCI, sq.yd, Moratorium){
 }
 
 
-# # f(value, weight, limit ) = pave. This is the basic Pave function
+# # f(value, weight, limit ) = pave. This is the OLD Pave function
 # # This is a greedy approximation to the Knapsack algorithm
 # knapsack <- function(value, weight, limit){
 #   benefit.to.cost <- value / weight #Create ratio
@@ -193,7 +193,7 @@ d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
   d$Delta.a <- Deltaf(d$OCI, d$sq.yd, d$Moritorium) # Difference between old OCI and potential OCI
-  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 1500000) # Pave or not in spring 2013
+  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 1000000, 1000000, d$OCI) # Pave or not in spring 2013
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Moritorium.a <- Moritoriumf(d$Pave.a, d$Moritorium) #if work has been done, hold for 3 years
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
@@ -201,7 +201,7 @@ d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
 d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
   d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd, d$Moritorium.a)
-  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1500000)
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1000000, 1000000, d$PCI.a)
   d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
   d$Moritorium.b <- Moritoriumf(d$Pave.b, d$Moritorium.a)
   d$Age.Tmp <- (1 + d$Age.a) 
@@ -209,7 +209,7 @@ d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
   d$Age.b <- Agef(d$PCI.b)
 d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
   d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd, d$Moritorium.b)
-  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1500000)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1000000, 1000000, d$PCI.b)
   d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
   d$Moritorium.c <- Moritoriumf(d$Pave.c, d$Moritorium.b)
   d$Age.Tmp <- (1 + d$Age.b) 
@@ -217,7 +217,7 @@ d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
   d$Age.c <- Agef(d$PCI.c)
 d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
   d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd, d$Moritorium.c)
-  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1500000)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1000000, 1000000, d$PCI.c)
   d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
   d$Moritorium.d <- Moritoriumf(d$Pave.d, d$Moritorium.c)
   d$Age.Tmp <- (1 + d$Age.c) 
@@ -225,7 +225,7 @@ d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
   d$Age.d <- Agef(d$PCI.d)
 d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
   d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd, d$Moritorium.d)
-  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1500000)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1000000, 1000000, d$PCI.d)
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
   d$Moritorium.e <- Moritoriumf(d$Pave.e, d$Moritorium.d)
   d$Age.Tmp <- (1 + d$Age.d) 
@@ -242,7 +242,7 @@ Modelf <- function(n){
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
   d$Delta.a <- Deltaf(d$OCI, d$sq.yd, d$Moritorium) # Difference between old OCI and potential OCI
-  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 1500000) # Pave or not in spring 2013
+  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 1000000, 1000000, d$OCI) # Pave or not in spring 2013
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Moritorium.a <- Moritoriumf(d$Pave.a, d$Moritorium) #if work has been done, hold for 3 years
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
@@ -250,7 +250,7 @@ Modelf <- function(n){
   d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
   d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
   d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd, d$Moritorium.a)
-  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1500000)
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1000000, 1000000, d$PCI.a)
   d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
   d$Moritorium.b <- Moritoriumf(d$Pave.b, d$Moritorium.a)
   d$Age.Tmp <- (1 + d$Age.a) 
@@ -258,7 +258,7 @@ Modelf <- function(n){
   d$Age.b <- Agef(d$PCI.b)
   d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
   d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd, d$Moritorium.b)
-  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1500000)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1000000, 1000000, d$PCI.b)
   d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
   d$Moritorium.c <- Moritoriumf(d$Pave.c, d$Moritorium.b)
   d$Age.Tmp <- (1 + d$Age.b) 
@@ -266,7 +266,7 @@ Modelf <- function(n){
   d$Age.c <- Agef(d$PCI.c)
   d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
   d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd, d$Moritorium.c)
-  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1500000)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1000000, 1000000, d$PCI.c)
   d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
   d$Moritorium.d <- Moritoriumf(d$Pave.d, d$Moritorium.c)
   d$Age.Tmp <- (1 + d$Age.c) 
@@ -274,7 +274,7 @@ Modelf <- function(n){
   d$Age.d <- Agef(d$PCI.d)
   d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
   d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd, d$Moritorium.d)
-  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1500000)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1000000, 1000000, d$PCI.d)
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
   d$Moritorium.e <- Moritoriumf(d$Pave.e, d$Moritorium.d)
   d$Age.Tmp <- (1 + d$Age.d) 
@@ -394,7 +394,7 @@ hist(backlog$total.cost)
 hist(backlog$first.year)
 
 
-# Final model for comparison to consultant: cap = $2m + worst streets  ####
+# Final model for comparison to consultant: cap = $2m + $2m worst streets  ####
 # Backlog after 5 years for consultant spending $4.5 m is $81,115,018 m.
 
 # f(n) = output
@@ -403,8 +403,7 @@ Modelf <- function(n){
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
   d$Delta.a <- Deltaf(d$OCI, d$sq.yd, d$Moritorium) # Difference between old OCI and potential OCI
-  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 1500000) # Pave or not in spring 2013
-  d$Pave.a <- ifelse(d$OCI < 10, 1, d$Pave.a) # Pave the worst streets
+  d$Pave.a <- knapsack(d$Delta.a, d$backlog, 2000000, 2000000, d$OCI) # Pave or not in spring 2013
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Moritorium.a <- Moritoriumf(d$Pave.a, d$Moritorium) #if work has been done, hold for 3 years
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
@@ -412,8 +411,7 @@ Modelf <- function(n){
   d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
   d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
   d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd, d$Moritorium.a)
-  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1500000)
-  d$Pave.b <- ifelse(d$PCI.a < 10, 1, d$Pave.b) 
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 2000000, 2000000, d$PCI.a)
   d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
   d$Moritorium.b <- Moritoriumf(d$Pave.b, d$Moritorium.a)
   d$Age.Tmp <- (1 + d$Age.a) 
@@ -421,8 +419,7 @@ Modelf <- function(n){
   d$Age.b <- Agef(d$PCI.b)
   d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
   d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd, d$Moritorium.b)
-  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1500000)
-  d$Pave.c <- ifelse(d$PCI.b < 10, 1, d$Pave.c)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 2000000, 2000000, d$PCI.b)
   d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
   d$Moritorium.c <- Moritoriumf(d$Pave.c, d$Moritorium.b)
   d$Age.Tmp <- (1 + d$Age.b) 
@@ -430,8 +427,7 @@ Modelf <- function(n){
   d$Age.c <- Agef(d$PCI.c)
   d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
   d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd, d$Moritorium.c)
-  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1500000)
-  d$Pave.d <- ifelse(d$PCI.c < 10, 1, d$Pave.d)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 2000000, 2000000, d$PCI.c)
   d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
   d$Moritorium.d <- Moritoriumf(d$Pave.d, d$Moritorium.c)
   d$Age.Tmp <- (1 + d$Age.c) 
@@ -439,8 +435,7 @@ Modelf <- function(n){
   d$Age.d <- Agef(d$PCI.d)
   d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
   d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd, d$Moritorium.d)
-  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1500000)
-  d$Pave.e <- ifelse(d$PCI.d < 10, 1, d$Pave.e)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 2000000, 2000000, d$PCI.d)
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
   d$Moritorium.e <- Moritoriumf(d$Pave.e, d$Moritorium.d)
   d$Age.Tmp <- (1 + d$Age.d) 
@@ -481,12 +476,12 @@ return(sum(d$backlog))
 # Stochastic Model (random spending number) to see return on investment ####
 
 Modelf <- function(n){
-  random <- runif(1, min=10000, max=3000000)
+  random <- runif(1, min=10000, max=2000000)
   d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
   d$Delta.a <- Deltaf(d$OCI, d$sq.yd, d$Moritorium) # Difference between old OCI and potential OCI
-  d$Pave.a <- knapsack(d$Delta.a, d$backlog, random) # Pave or not in spring 2013
+  d$Pave.a <- knapsack(d$Delta.a, d$backlog, random, random, d$OCI) # Pave or not in spring 2013
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Moritorium.a <- Moritoriumf(d$Pave.a, d$Moritorium) #if work has been done, hold for 3 years
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
@@ -494,7 +489,7 @@ Modelf <- function(n){
   d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
   d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
   d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd, d$Moritorium.a)
-  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, random)
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, random, random, d$PCI.a)
   d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
   d$Moritorium.b <- Moritoriumf(d$Pave.b, d$Moritorium.a)
   d$Age.Tmp <- (1 + d$Age.a) 
@@ -502,7 +497,7 @@ Modelf <- function(n){
   d$Age.b <- Agef(d$PCI.b)
   d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
   d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd, d$Moritorium.b)
-  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, random)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, random, random, d$PCI.b)
   d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
   d$Moritorium.c <- Moritoriumf(d$Pave.c, d$Moritorium.b)
   d$Age.Tmp <- (1 + d$Age.b) 
@@ -510,7 +505,7 @@ Modelf <- function(n){
   d$Age.c <- Agef(d$PCI.c)
   d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
   d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd, d$Moritorium.c)
-  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, random)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, random, random, d$PCI.c)
   d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
   d$Moritorium.d <- Moritoriumf(d$Pave.d, d$Moritorium.c)
   d$Age.Tmp <- (1 + d$Age.c) 
@@ -518,7 +513,7 @@ Modelf <- function(n){
   d$Age.d <- Agef(d$PCI.d)
   d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
   d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd, d$Moritorium.d)
-  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, random)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, random, random, d$PCI.d)
   d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
   d$Moritorium.e <- Moritoriumf(d$Pave.e, d$Moritorium.d)
   d$Age.Tmp <- (1 + d$Age.d) 
