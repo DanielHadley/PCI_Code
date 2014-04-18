@@ -87,18 +87,45 @@ Deltaf <- function(OldOCI, sq.yd, Moratorium){
 }
 
 
-# f(value, weight, limit ) = pave. This is the basic Pave function
+# # f(value, weight, limit ) = pave. This is the basic Pave function
+# # This is a greedy approximation to the Knapsack algorithm
+# knapsack <- function(value, weight, limit){
+#   benefit.to.cost <- value / weight #Create ratio
+#   df = data.frame(value, weight, benefit.to.cost) # turn it into a DF
+#   df$ID <- (1:nrow(df)) # add ID to resort later
+#   df <- df[with(df, order(-benefit.to.cost)), ] # Sort by benefit.to.cost
+#   rownames(df) <- NULL # Reset the row names for easier indexing
+#   df$total.weight <- ifelse(cumsum(df$weight) <= limit, cumsum(df$weight), 0) # Add first items that fit
+#   # I need to add a break here if nothing fits in the bag on the first pass
+#   for(i in 2:nrow(df)){ #Start in row 2 because some values have been added above
+#     df$total.weight[i] <- ifelse(df$weight[i] + df$total.weight[i-1] <= limit, # If adding won't go over limit
+#                                  df$weight[i] + df$total.weight[i-1], df$total.weight[i-1]) # If it will, keep Weight the same
+#   }
+#   df$add <- 0
+#   df$add[1] <- ifelse(df$total.weight[1] > 0, 1, 0)
+#   for(i in 2:nrow(df)){ #Start in row 2 
+#     df$add[i] <- ifelse(df$total.weight[i] > df$total.weight[i-1], 1, 0) # 1 if it has been added
+#   }
+#   df$add <- ifelse(df$benefit.to.cost == 0, 0, df$add) #To avoid paving streets under moratorium
+#   df$add <- ifelse(df$value == 0, 0, df$add)
+#   df <- df[with(df, order(ID)), ] # Resort by ID
+#   rownames(df) <- NULL # Reset the row names for easier indexing
+#   return(df$add)
+# }
+
+
+# f(value, weight, limit preventive maintenance, limit reconstruction) = pave. This is the basic Pave function
 # This is a greedy approximation to the Knapsack algorithm
-knapsack <- function(value, weight, limit){
+knapsack <- function(value, weight, limitPM, limitR, PCI){
   benefit.to.cost <- value / weight #Create ratio
-  df = data.frame(value, weight, benefit.to.cost) # turn it into a DF
+  df = data.frame(value, weight, benefit.to.cost, PCI) # turn it into a DF
   df$ID <- (1:nrow(df)) # add ID to resort later
   df <- df[with(df, order(-benefit.to.cost)), ] # Sort by benefit.to.cost
   rownames(df) <- NULL # Reset the row names for easier indexing
-  df$total.weight <- ifelse(cumsum(df$weight) <= limit, cumsum(df$weight), 0) # Add first items that fit
+  df$total.weight <- ifelse(cumsum(df$weight) <= limitPM, cumsum(df$weight), 0) # Add first items that fit
   # I need to add a break here if nothing fits in the bag on the first pass
   for(i in 2:nrow(df)){ #Start in row 2 because some values have been added above
-    df$total.weight[i] <- ifelse(df$weight[i] + df$total.weight[i-1] <= limit, # If adding won't go over limit
+    df$total.weight[i] <- ifelse(df$weight[i] + df$total.weight[i-1] <= limitPM, # If adding won't go over limit
                                  df$weight[i] + df$total.weight[i-1], df$total.weight[i-1]) # If it will, keep Weight the same
   }
   df$add <- 0
@@ -108,9 +135,27 @@ knapsack <- function(value, weight, limit){
   }
   df$add <- ifelse(df$benefit.to.cost == 0, 0, df$add) #To avoid paving streets under moratorium
   df$add <- ifelse(df$value == 0, 0, df$add)
+  # Now do it all again for full reconstruction of the worst streets
+  df <- df[with(df, order(PCI)), ] # Sort by PCI
+  rownames(df) <- NULL # Reset the row names for easier indexing
+  df$total.weight.a <- ifelse(cumsum(df$weight) <= limitR, cumsum(df$weight), 0) # Add first items that fit
+  # I need to add a break here if nothing fits in the bag on the first pass
+  for(i in 2:nrow(df)){ #Start in row 2 because some values have been added above
+    df$total.weight.a[i] <- ifelse(df$weight[i] + df$total.weight.a[i-1] <= limitR, # If adding won't go over limit
+                                 df$weight[i] + df$total.weight.a[i-1], df$total.weight.a[i-1]) # If it will, keep Weight the same
+  }
+  df$add.a <- 0
+  df$add.a[1] <- ifelse(df$total.weight.a[1] > 0, 1, 0)
+  for(i in 2:nrow(df)){ #Start in row 2 
+    df$add.a[i] <- ifelse(df$total.weight.a[i] > df$total.weight.a[i-1], 1, 0) # 1 if it has been added
+  }
+  df$add.a <- ifelse(df$benefit.to.cost == 0, 0, df$add.a) #To avoid paving streets under moratorium
+  df$add.a <- ifelse(df$value == 0, 0, df$add.a)
+  # now resort
   df <- df[with(df, order(ID)), ] # Resort by ID
   rownames(df) <- NULL # Reset the row names for easier indexing
-  return(df$add)
+  df$pave <- df$add + df$add.a
+  return(df$pave)
 }
 
 
