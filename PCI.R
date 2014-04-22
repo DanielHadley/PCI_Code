@@ -14,8 +14,8 @@ library("plyr")
 
 
 # Import data ####
-setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
-# setwd ("~/Documents/Git/PCI_Code") #at home
+# setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
+setwd ("~/Documents/Git/PCI_Code") #at home
 d <- read.csv("PCI.csv")
 
 
@@ -516,7 +516,9 @@ Modelf <- function(n){
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
   d$Delta.a <- Deltaf(d$OCI, d$sq.yd, d$Moritorium) # Difference between old OCI and potential OCI
-  d$Pave.a <- knapsack(d$Delta.a, d$backlog, random, random, d$OCI) # Pave or not in spring 2013
+  ## The following list is missing the private ways and the part of Shore they did. Was it all Shore?
+  d$Pave.a <- ifelse(d$STREETNAME %in% c('ALBION ST' , 'ALBION TERR', 'BELMONT SQ', 'HAMMOND ST',
+                                         'MORGAN ST', 'WHEELER ST', 'WYATT ST', 'YORKTOWN ST'), 1, 0)
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
   d$Moritorium.a <- Moritoriumf(d$Pave.a, d$Moritorium) #if work has been done, hold for 3 years
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
@@ -564,8 +566,10 @@ Modelf <- function(n){
   average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
                             (sum(d$cost.d)) + (sum(d$cost.e))) / 5
   first.year <- sum(d$cost.a)
+  weighted.PCI.a <- weighted.mean(d$PCI.a, d$sq.yd)
+  weighted.PCI.e <- weighted.mean(d$PCI.e, d$sq.yd)
   output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, 
-                 average.annual.cost, first.year, random)
+                 average.annual.cost, first.year, random, weighted.PCI.a, weighted.PCI.e)
   return(output)
 }
 
@@ -577,7 +581,7 @@ library("plyr")
 l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
 backlog <- data.frame(matrix(unlist(l), nrow=1000, byrow=T))
 colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
-                       "average.annual.cost", "first.year", "PMSpending")
+                       "average.annual.cost", "first.year", "Spending", "PCI.a", "PCI.e")
 
 hist(backlog$benefit.to.cost)
 hist(backlog$average.annual.cost)
