@@ -511,7 +511,7 @@ return(sum(d$backlog))
 # Stochastic Model (random spending number) to see return on investment ####
 
 Modelf <- function(n){
-  random <- runif(1, min=10000, max=2000000)
+  random <- runif(1, min=10000, max=3000000)
   d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
@@ -585,7 +585,7 @@ hist(backlog$total.cost)
 hist(backlog$first.year)
 
 
-# Here are the Streets that DPW did in 2013 ####
+# Here are the Streets that DPW did in 2013 + a Model of worst first at historic levels ####
 Modelf <- function(n){
   d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
@@ -634,7 +634,6 @@ Modelf <- function(n){
   d$backlog.e <- Costf(d$PCI.e, d$Functional, d$sq.yd)
   return(sum(d$backlog))
 }
-
 
 
 # Visualizations ####
