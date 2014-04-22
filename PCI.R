@@ -457,18 +457,53 @@ Modelf <- function(n){
 Modelf(1)
 
 
-# Here are the Streets that DPW did in 2013 (need moritorium) ####
+# Here are the Streets that DPW did in 2013 ####
 Modelf <- function(n){
   d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
+  d$Moritorium <- 0 # Hold for three years between routine maintenance 
+  d$Delta.a <- Deltaf(d$OCI, d$sq.yd, d$Moritorium) # Difference between old OCI and potential OCI
   ## The following list is missing the private ways and the part of Shore they did. Was it all Shore?
   d$Pave.a <- ifelse(d$STREETNAME %in% c('ALBION ST' , 'ALBION TERR', 'BELMONT SQ', 'HAMMOND ST',
                                          'MORGAN ST', 'WHEELER ST', 'WYATT ST', 'YORKTOWN ST'), 1, 0)
   d$cost.a <- ifelse(d$Pave.a == 1, Costf(d$OCI, d$Functional, d$sq.yd),0) #The cost to pave the selected streets
+  d$Moritorium.a <- Moritoriumf(d$Pave.a, d$Moritorium) #if work has been done, hold for 3 years
   d$Age.Tmp <- (1 + d$Age) #Temporary to do the new PCI calculation
   d$PCI.a <-  NewPCIf(d$Age.Tmp, d$Pave.a, d$OCI)
   d$Age.a <- Agef(d$PCI.a) # The new "age" in Nov 2013. E.g., crack and seal streets are not brand new.
   d$backlog.a <- Costf(d$PCI.a, d$Functional, d$sq.yd) #Backlog in Nov 2013
+  d$Delta.b <- Deltaf(d$PCI.a, d$sq.yd, d$Moritorium.a)
+  d$Pave.b <- knapsack(d$Delta.b, d$backlog.a, 1000000, 1000000, d$PCI.a)
+  d$cost.b <- ifelse(d$Pave.b == 1, Costf(d$PCI.a, d$Functional, d$sq.yd),0)
+  d$Moritorium.b <- Moritoriumf(d$Pave.b, d$Moritorium.a)
+  d$Age.Tmp <- (1 + d$Age.a) 
+  d$PCI.b <-  NewPCIf(d$Age.Tmp, d$Pave.b, d$PCI.a)
+  d$Age.b <- Agef(d$PCI.b)
+  d$backlog.b <- Costf(d$PCI.b, d$Functional, d$sq.yd)
+  d$Delta.c <- Deltaf(d$PCI.b, d$sq.yd, d$Moritorium.b)
+  d$Pave.c <- knapsack(d$Delta.c, d$backlog.b, 1000000, 1000000, d$PCI.b)
+  d$cost.c <- ifelse(d$Pave.c == 1, Costf(d$PCI.b, d$Functional, d$sq.yd),0)
+  d$Moritorium.c <- Moritoriumf(d$Pave.c, d$Moritorium.b)
+  d$Age.Tmp <- (1 + d$Age.b) 
+  d$PCI.c <-  NewPCIf(d$Age.Tmp, d$Pave.c, d$PCI.b)
+  d$Age.c <- Agef(d$PCI.c)
+  d$backlog.c <- Costf(d$PCI.c, d$Functional, d$sq.yd)
+  d$Delta.d <- Deltaf(d$PCI.c, d$sq.yd, d$Moritorium.c)
+  d$Pave.d <- knapsack(d$Delta.d, d$backlog.c, 1000000, 1000000, d$PCI.c)
+  d$cost.d <- ifelse(d$Pave.d == 1, Costf(d$PCI.c, d$Functional, d$sq.yd),0)
+  d$Moritorium.d <- Moritoriumf(d$Pave.d, d$Moritorium.c)
+  d$Age.Tmp <- (1 + d$Age.c) 
+  d$PCI.d <-  NewPCIf(d$Age.Tmp, d$Pave.d, d$PCI.c)
+  d$Age.d <- Agef(d$PCI.d)
+  d$backlog.d <- Costf(d$PCI.d, d$Functional, d$sq.yd)
+  d$Delta.e <- Deltaf(d$PCI.d, d$sq.yd, d$Moritorium.d)
+  d$Pave.e <- knapsack(d$Delta.e, d$backlog.d, 1000000, 1000000, d$PCI.d)
+  d$cost.e <- ifelse(d$Pave.e == 1, Costf(d$PCI.d, d$Functional, d$sq.yd),0)
+  d$Moritorium.e <- Moritoriumf(d$Pave.e, d$Moritorium.d)
+  d$Age.Tmp <- (1 + d$Age.d) 
+  d$PCI.e <-  NewPCIf(d$Age.Tmp, d$Pave.e, d$PCI.d)
+  d$Age.e <- Agef(d$PCI.e)
+  d$backlog.e <- Costf(d$PCI.e, d$Functional, d$sq.yd)
 return(sum(d$backlog))
 }
 
@@ -550,3 +585,24 @@ hist(backlog$total.cost)
 hist(backlog$first.year)
 
 
+# Visualizations ####
+library(ggplot2)
+
+my.theme <- 
+  theme(plot.background = element_blank(), # Remove background
+        panel.grid.major = element_blank(), # Remove gridlines
+        panel.grid.minor = element_blank(), # Remove more gridlines
+        panel.border = element_blank(), # Remove border
+        panel.background = element_blank(), # Remove more background
+        axis.ticks = element_blank(), # Remove axis ticks
+        axis.text=element_text(size=24), # Enlarge axis text font
+        axis.title=element_text(size=26), # Enlarge axis title font
+        plot.title=element_text(size=42, hjust=0) # Enlarge, left-align title
+        #,axis.text.x = element_text(angle=60, hjust = 1) # Uncomment if X-axis unreadable 
+  )
+
+p <- qplot(OCI, weight = sq.yd, data = d, geom = "histogram", alpha=I(.7), main="Data By Year", ylab="Col2 Count")
+p + my.theme
+
+p <- qplot(PCI.e, weight = sq.yd, data = d, geom = "histogram", alpha=I(.7), main="Data By Year", ylab="Col2 Count")
+p + my.theme
