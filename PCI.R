@@ -14,8 +14,8 @@ library("plyr")
 
 
 # Import data ####
-# setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
-setwd ("~/Documents/Git/PCI_Code") #at home
+setwd("K:/Somerstat/Common/Data/2014 StreetStat/PCI_Code")
+# setwd ("~/Documents/Git/PCI_Code") #at home
 d <- read.csv("PCI.csv")
 
 
@@ -511,7 +511,7 @@ return(sum(d$backlog))
 # Stochastic Model (random spending number) to see return on investment ####
 
 Modelf <- function(n){
-  random <- runif(1, min=10000, max=3000000)
+  random <- runif(1, min=0, max=6000000)
   d$Age <- Agef(d$OCI) # Estimated age in Nov 2012
   d$backlog <- Costf(d$OCI, d$Functional, d$sq.yd) # Backlog in Nov 2012
   d$Moritorium <- 0 # Hold for three years between routine maintenance 
@@ -560,7 +560,8 @@ Modelf <- function(n){
   #   Now create the outputs
   random <- random
   backlog <- sum(d$backlog.e)
-  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e))
+  backlog.reduction <- (sum(d$backlog)) - (sum(d$backlog.e)) 
+  backlog.change.percent <- (sum(d$backlog.e)) - (sum(d$backlog))/(sum(d$backlog))
   total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
   benefit.to.cost <- backlog.reduction / total.cost
   average.annual.cost <- ((sum(d$cost.a)) + (sum(d$cost.b)) + (sum(d$cost.c)) + 
@@ -569,12 +570,9 @@ Modelf <- function(n){
   weighted.PCI.a <- weighted.mean(d$PCI.a, d$sq.yd)
   weighted.PCI.e <- weighted.mean(d$PCI.e, d$sq.yd)
   min.PCI.e <- min(d$PCI.e)
-  avg.change.PCI <- mean((d$PCI.a - d$OCI)/d$OCI, (d$PCI.b - d$PCI.a)/d$PCI.a,
-                         (d$PCI.c - d$PCI.b)/d$PCI.b, (d$PCI.d - d$PCI.c)/d$PCI.c,
-                         (d$PCI.e - d$PCI.d)/d$PCI.d)
-  output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, 
+  output <- list(backlog, backlog.reduction, backlog.change.percent, total.cost, benefit.to.cost, 
                  average.annual.cost, first.year, random, weighted.PCI.a, 
-                 weighted.PCI.e, min.PCI.e, avg.change.PCI)
+                 weighted.PCI.e, min.PCI.e)
   return(output)
 }
 
@@ -583,11 +581,11 @@ Modelf(1)
 # Now run the function X number of times
 # http://stats.stackexchange.com/questions/7999/how-to-efficiently-repeat-a-function-on-a-data-set-in-r
 library("plyr")
-l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
-backlog <- data.frame(matrix(unlist(l), nrow=1000, byrow=T))
-colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
+l <- alply(cbind(rep(10000,10000),rep(20,10)),1,Modelf)
+backlog <- data.frame(matrix(unlist(l), nrow=10000, byrow=T))
+colnames(backlog) <- c("backlog", "backlog.change", "backlog.change.percent", "total.cost", "benefit.to.cost", 
                        "average.annual.cost", "first.year", "Spending", "PCI.a", "PCI.e", 
-                       "min.PCI.e", "avg.change.PCI")
+                       "min.PCI.e")
 
 hist(backlog$benefit.to.cost)
 hist(backlog$average.annual.cost)
