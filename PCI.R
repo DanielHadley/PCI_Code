@@ -569,8 +569,12 @@ Modelf <- function(n){
   weighted.PCI.a <- weighted.mean(d$PCI.a, d$sq.yd)
   weighted.PCI.e <- weighted.mean(d$PCI.e, d$sq.yd)
   min.PCI.e <- min(d$PCI.e)
+  avg.change.PCI <- mean((d$PCI.a - d$OCI)/d$OCI, (d$PCI.b - d$PCI.a)/d$PCI.a,
+                         (d$PCI.c - d$PCI.b)/d$PCI.b, (d$PCI.d - d$PCI.c)/d$PCI.c,
+                         (d$PCI.e - d$PCI.d)/d$PCI.d)
   output <- list(backlog, backlog.reduction, total.cost, benefit.to.cost, 
-                 average.annual.cost, first.year, random, weighted.PCI.a, weighted.PCI.e, min.PCI.e)
+                 average.annual.cost, first.year, random, weighted.PCI.a, 
+                 weighted.PCI.e, min.PCI.e, avg.change.PCI)
   return(output)
 }
 
@@ -582,7 +586,8 @@ library("plyr")
 l <- alply(cbind(rep(1000,1000),rep(20,10)),1,Modelf)
 backlog <- data.frame(matrix(unlist(l), nrow=1000, byrow=T))
 colnames(backlog) <- c("backlog", "backlog.reduction", "total.cost", "benefit.to.cost", 
-                       "average.annual.cost", "first.year", "Spending", "PCI.a", "PCI.e", "min.PCI.e")
+                       "average.annual.cost", "first.year", "Spending", "PCI.a", "PCI.e", 
+                       "min.PCI.e", "avg.change.PCI")
 
 hist(backlog$benefit.to.cost)
 hist(backlog$average.annual.cost)
