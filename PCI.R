@@ -162,9 +162,9 @@ knapsack <- function(value, weight, limitPM, limitR, PCI){
 # f(Age, Pave, Old PCI) = New PCI
 # See AnalyzePCI.R
 NewPCIf <- function(AGE, Pave, OldOCI){
-  NewPCI <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Pave == 1), OldOCI + 8,
-                   # why + 7: http//www.ci.san-ramon.ca.us/engr/pavement.html
-                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Pave == 1), OldOCI + 7,
+  NewPCI <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Pave == 1), OldOCI + 10,
+                   # why + 7: https://repository.tamu.edu/bitstream/handle/1969.1/ETD-TAMU-2009-05-317/DESHMUKH-THESIS.pdf?sequence=2
+                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Pave == 1), OldOCI + 10,
                           ifelse((OldOCI >= 25) & (OldOCI < 47) & (Pave == 1), 96, 
                                  # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
                                  ifelse((OldOCI >= 0) & (OldOCI < 25) & (Pave == 1), 100,
