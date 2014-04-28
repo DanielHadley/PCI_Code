@@ -288,11 +288,13 @@ Modelf <- function(n, limitPM, limitR){
   backlog.change <- ((sum(d$backlog.e)) - (sum(d$backlog))) / (sum(d$backlog))
   total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
   benefit.to.cost <- backlog.reduction / total.cost
-  low <- d[ which(d$PCI.e < 30), ]
+  low <- d[ which(d$PCI.e < 47), ]
   percent.low <- (sum(low$sq.yd))/1655897
+  failing <- d[ which(d$PCI.e < 25), ]
+  percent.failing <- (sum(failing$sq.yd))/1655897
   pci <- weighted.mean(d$PCI.e, d$sq.yd)
   min.pci <- min(d$PCI.e)
-  output <- list(backlog, backlog.reduction, backlog.change, total.cost, benefit.to.cost, percent.low, pci, min.pci)
+  output <- list(backlog, backlog.reduction, backlog.change, total.cost, benefit.to.cost, percent.low, percent.failing, pci, min.pci)
   return(output)
 }
 Modelf(1, 2000000, 2200000)
@@ -582,14 +584,16 @@ Modelf <- function(n, limitPM, limitR){
   backlog.change <- ((sum(d$backlog.e)) - (sum(d$backlog))) / (sum(d$backlog))
   total.cost <- sum(d$cost.a, d$cost.b, d$cost.c, d$cost.d, d$cost.e)
   benefit.to.cost <- backlog.reduction / total.cost
-  low <- d[ which(d$PCI.e < 30), ]
+  low <- d[ which(d$PCI.e < 47), ]
   percent.low <- (sum(low$sq.yd))/1655897
+  failing <- d[ which(d$PCI.e < 25), ]
+  percent.failing <- (sum(failing$sq.yd))/1655897
   pci <- weighted.mean(d$PCI.e, d$sq.yd)
   min.pci <- min(d$PCI.e)
-  output <- list(backlog, backlog.reduction, backlog.change, total.cost, benefit.to.cost, percent.low, pci, min.pci)
+  output <- list(backlog, backlog.reduction, backlog.change, total.cost, benefit.to.cost, percent.low, percent.failing, pci, min.pci)
   return(output)
 }
-Modelf(1, 2000000, 2200000)
+Modelf(1, 500000, 2200000)
 
 
 # Visualizations ####
