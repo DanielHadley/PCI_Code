@@ -8,7 +8,9 @@
 # 1. The knapsack approximates an optimal outcome, but needs to be inspected in cases where the 
 # limit is low,E.g., http://oucsace.cs.ohiou.edu/~razvan/courses/cs4040/lecture16.pdf
 # 2. The model makes assumptions about the differences in PCI reset of various treatment types.
-# It assumes that patching only resets to PCI + 6, for example. 
+# It assumes that patching and Crack/Seal resets to PCI + 10, for example.
+# The problem with this is that it does not prioritize streets that are about to fall off the cliff
+# If things reset to 96, for example, that would make the delta higher on ones about to change
 
 library("plyr")
 
@@ -76,8 +78,8 @@ Moritoriumf <- function(Pave, MoritoriumX){
 # The penultimate line ensures that during the moratorium (3 years after work is done), that
 # street is not selected for maintenance yet
 Deltaf <- function(OldOCI, sq.yd, Moratorium){ 
-   Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Moratorium == 0), ((OldOCI + 8) * sq.yd) - (OldOCI * sq.yd),
-                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Moratorium == 0), ((OldOCI + 7) * sq.yd) - (OldOCI * sq.yd),
+   Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Moratorium == 0), ((OldOCI + 10) * sq.yd) - (OldOCI * sq.yd),
+                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Moratorium == 0), ((OldOCI + 10) * sq.yd) - (OldOCI * sq.yd),
                    # why + 8 and +9: http//www.ci.san-ramon.ca.us/engr/pavement.html
                    ifelse((OldOCI >= 25) & (OldOCI < 47) & (Moratorium == 0), (96 * sq.yd) - (OldOCI * sq.yd),
                           ifelse(Moratorium != 0, 0, 
@@ -629,3 +631,18 @@ p + my.theme
 
 p <- qplot(PCI.e, weight = sq.yd, data = d, geom = "histogram", alpha=I(.7), main="Data By Year", ylab="Col2 Count")
 p + my.theme
+
+
+# Make a selection of streets to pave in FY14 (early FY15) ####
+
+# Total funds available = $2.4 Million
+# First enter the values
+limitPM <- 400000 
+limitR <- 2000000
+# Now run the lines of code inside the final model function
+
+# Now export the results
+# Export
+write.csv(d, file = "Pave2014.csv")
+
+
