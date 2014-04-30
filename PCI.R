@@ -77,11 +77,14 @@ Moritoriumf <- function(Pave, MoritoriumX){
 # This is essentially the "value" in the knapsack algo
 # The penultimate line ensures that during the moratorium (3 years after work is done), that
 # street is not selected for maintenance yet
+# One problem I saw is that all streets that received preventive maintenance were ranked the same (10-OCI)
+# So I added a litttle bit to make sure that streets on the low end recieved a slightly higher PCI bump
 Deltaf <- function(OldOCI, sq.yd, Moratorium){ 
-   Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Moratorium == 0), ((OldOCI + 10) * sq.yd) - (OldOCI * sq.yd),
-                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Moratorium == 0), ((OldOCI + 10) * sq.yd) - (OldOCI * sq.yd),
-                   # why + 8 and +9: http//www.ci.san-ramon.ca.us/engr/pavement.html
-                   ifelse((OldOCI >= 25) & (OldOCI < 47) & (Moratorium == 0), (96 * sq.yd) - (OldOCI * sq.yd),
+   Delta <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Moratorium == 0), 
+                    (((OldOCI + 10) * sq.yd) - (OldOCI * sq.yd)) + (.05 * ((96 * sq.yd) - (OldOCI * sq.yd))), #5% finds ones on the cliff
+                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Moratorium == 0), 
+                          (((OldOCI + 10) * sq.yd) - (OldOCI * sq.yd)) + (.05 * ((96 * sq.yd) - (OldOCI * sq.yd))),
+                   ifelse((OldOCI >= 25) & (OldOCI < 47) & (Moratorium == 0), (68 * sq.yd) - (OldOCI * sq.yd),
                           ifelse(Moratorium != 0, 0, 
                           (100 * sq.yd) - (OldOCI * sq.yd)
                                  ))))                      
@@ -164,9 +167,9 @@ knapsack <- function(value, weight, limitPM, limitR, PCI){
 # f(Age, Pave, Old PCI) = New PCI
 # See AnalyzePCI.R
 NewPCIf <- function(AGE, Pave, OldOCI){
-  NewPCI <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Pave == 1), OldOCI + 10,
+  NewPCI <- ifelse((OldOCI >= 68) & (OldOCI < 88) & (Pave == 1), (OldOCI + 10) + (.05 *(96 - OldOCI)),
                    # why + 7: https://repository.tamu.edu/bitstream/handle/1969.1/ETD-TAMU-2009-05-317/DESHMUKH-THESIS.pdf?sequence=2
-                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Pave == 1), OldOCI + 10,
+                   ifelse((OldOCI >= 47) & (OldOCI < 68) & (Pave == 1), (OldOCI + 10) + (.05 *(68 - OldOCI)),
                           ifelse((OldOCI >= 25) & (OldOCI < 47) & (Pave == 1), 96, 
                                  # http://www.mylongview.com/modules/showdocument.aspx?documentid=631
                                  ifelse((OldOCI >= 0) & (OldOCI < 25) & (Pave == 1), 100,
