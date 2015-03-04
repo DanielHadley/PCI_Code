@@ -68,15 +68,16 @@ Costf <- function(OCI, Functional, sq.yd){
 #### Optimize ####
 
 d <- d %>%
-  mutate(NewOCI = NewOCIf(OCI),
-         value = (NewOCI - OCI) * sq.yd, # the value to the city 
+  mutate(PCI = OCI,
+         NewPCI = NewOCIf(OCI),
+         value = (NewPCI - OCI) * sq.yd, # the value to the city 
          cost = Costf(OCI, Functional, sq.yd)) %>% # cost to pave the street
   filter(value > 0) # drop the streets with no plan activity
 
 
 # subset to the most important variables
 d <- d %>%
-  select(Functional, STREETNAME, PlanActivi, OCI, NewOCI, value, cost)
+  select(Functional, STREETNAME, PlanActivi, PCI, NewPCI, value, cost)
 
 
 # Set up the problem in Rglpk
@@ -90,15 +91,15 @@ f <- d$value
 var.types <- rep("B", num.streets)
 # the constraints
 # Leaving out flex for now
-A <- rbind(as.numeric(d$Functional == "CO - Collector"), # num QB
+A <- rbind(as.numeric(d$Functional == "CO - Collector"), # num collectors
            as.numeric(d$PlanActivi == "(BR) Recon/Reclaim Local w/ramps"), # num full-depth
-           d$cost)                    # total cost
+           d$cost)                    # total budget
 
 dir <- c(">=",
          ">=",
          "<=")
 
-b <- c(40,
+b <- c(32,
        3,
        3000000)
 
