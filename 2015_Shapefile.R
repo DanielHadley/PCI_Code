@@ -62,6 +62,23 @@ ggmap(map) +
   scale_colour_gradientn(colours=rev(brewer.pal(9,"YlGnBu")))
 
 
+# A for loop that will create a dot map for every neighborhood you specify
+neighborhoodList <- c("Assembly Square", "Ball Square", "City Hall", "Davis Square", "East Somerville", "Gilman Square", "Magoun Square", "Porter Square", "Prospect Hill", "Spring Hill", "Teele Square", "Ten Hills", "Union Square", "Winter Hill")
+
+for (n in 1:(length(neighborhoodList))) {
+  map <- get_map(location = paste(neighborhoodList[n], "Somerville, MA", sep=", "), zoom=16, maptype="roadmap", color = "bw")
+  ggmap(map) +
+    geom_path(data=data_merged,size=1.5,
+              aes(x=long,y=lat,group=group,color=OCI))+
+    labs(x="",y="")+
+    theme(axis.text=element_blank(),axis.ticks=element_blank()) +
+    scale_colour_gradientn(colours=rev(brewer.pal(9,"YlGnBu"))) + 
+    ggtitle(neighborhoodList[n])
+  
+  ggsave(paste("./map_",neighborhoodList[n], ".png", sep=""), dpi=250, width=6, height=5)
+  
+}
+
 
 ## Now try to combine with past data
 d <- read.csv("./PCI.csv")
