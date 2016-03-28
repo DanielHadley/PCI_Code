@@ -59,7 +59,10 @@ ggmap(map) +
             aes(x=long,y=lat,group=group,color=OCI))+
   labs(x="",y="")+
   theme(axis.text=element_blank(),axis.ticks=element_blank()) +
-  scale_colour_gradientn(colours=rev(brewer.pal(9,"YlGnBu")))
+  scale_colour_gradientn(colours=rev(brewer.pal(9,"YlGnBu"))) +
+  ggtitle("Pavement Condition Index")
+
+ggsave("map_all_City.png", dpi=250, width=6, height=5)
 
 
 # A for loop that will create a dot map for every neighborhood you specify
